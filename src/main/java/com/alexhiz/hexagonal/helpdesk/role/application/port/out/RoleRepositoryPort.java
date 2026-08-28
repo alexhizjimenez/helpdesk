@@ -2,6 +2,7 @@ package com.alexhiz.hexagonal.helpdesk.role.application.port.out;
 
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.Role;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,4 +11,6 @@ public interface RoleRepositoryPort {
     Optional<Role> findById(UUID id);
     boolean existsById(UUID id);
     boolean existsByName(String name);
+    List<Role> findAll();
+    void delete(UUID id);
 }

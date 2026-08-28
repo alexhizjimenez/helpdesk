@@ -2,6 +2,7 @@ package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.per
 
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,14 +12,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
+@RequiredArgsConstructor
 public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
     private final DepartmentRepository departmentRepository;
     private final DepartmentPersistenceMapper departmentPersistenceMapper;
-
-    public DepartmentPersistenceAdapter(DepartmentRepository departmentRepository, DepartmentPersistenceMapper departmentPersistenceMapper) {
-        this.departmentRepository = departmentRepository;
-        this.departmentPersistenceMapper = departmentPersistenceMapper;
-    }
 
     @Override
     public Department save(Department department) {

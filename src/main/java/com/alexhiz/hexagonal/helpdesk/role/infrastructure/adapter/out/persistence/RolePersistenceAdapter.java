@@ -5,18 +5,17 @@ import com.alexhiz.hexagonal.helpdesk.role.domain.model.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
+@RequiredArgsConstructor
 public class RolePersistenceAdapter implements RoleRepositoryPort {
     private final RoleRepository roleRepository;
     private final RolePersistenceMapper rolePersistenceMapper;
 
-    public RolePersistenceAdapter(RoleRepository roleRepository, RolePersistenceMapper rolePersistenceMapper) {
-        this.roleRepository = roleRepository;
-        this.rolePersistenceMapper = rolePersistenceMapper;
-    }
 
     @Override
     public Role save(Role role) {
@@ -38,5 +37,15 @@ public class RolePersistenceAdapter implements RoleRepositoryPort {
     @Override
     public boolean existsByName(String name) {
         return roleRepository.existsByName(name);
+    }
+
+    @Override
+    public List<Role> findAll() {
+        return roleRepository.findAll().stream().map(rolePersistenceMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public void delete(UUID id) {
+        roleRepository.deleteById(id);
     }
 }

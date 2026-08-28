@@ -1,11 +1,14 @@
 package com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.in.rest.dto;
 
+import com.alexhiz.hexagonal.helpdesk.role.domain.model.Role;
+import com.alexhiz.hexagonal.helpdesk.user.domain.model.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public record UserRequest(
         UUID id,
@@ -27,4 +30,20 @@ public record UserRequest(
 
         Set<UUID> roleIds
 ) {
+    public User toDomain() {
+        return User.builder()
+                .id(id)
+                .fullName(fullName)
+                .email(email)
+                .password(password)
+                .phone(phone)
+                .departmentId(departmentId)
+                .roles(roleIds != null
+                        ? roleIds.stream()
+                                .map(roleId -> Role.builder().id(roleId).build())
+                                .collect(Collectors.toSet())
+                        : null)
+                .build();
+    }
 }
+
