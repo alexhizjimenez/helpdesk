@@ -2,11 +2,13 @@ package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.per
 
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import java.util.stream.Collectors;
 
 @Repository
 public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
@@ -26,6 +28,13 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
     }
 
     @Override
+    public List<Department> findAll() {
+        return departmentRepository.findAll().stream()
+                .map(departmentPersistenceMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<Department> findById(UUID id) {
         return departmentRepository.findById(id).map(departmentPersistenceMapper::toDomain);
     }
@@ -39,4 +48,11 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
     public boolean existsByName(String name) {
         return departmentRepository.existsByName(name);
     }
+
+    @Override
+    public void delete(UUID id) {
+        departmentRepository.deleteById(id);
+    }
+
+    
 }
