@@ -11,8 +11,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public record UserRequest(
-        UUID id,
-
         @NotBlank(message = "Full name is required")
         String fullName,
 
@@ -32,7 +30,6 @@ public record UserRequest(
 ) {
     public User toDomain() {
         return User.builder()
-                .id(id)
                 .fullName(fullName)
                 .email(email)
                 .password(password)
