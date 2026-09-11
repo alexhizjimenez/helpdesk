@@ -1,4 +1,4 @@
-package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence;
+ package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence;
 
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
@@ -66,6 +66,6 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
         Pageable pageable = PageRequest.of(pageQuery.page(), pageQuery.size());
         Page<DepartmentEntity> entityPage= departmentRepository.findAll(pageable);
         List<Department> list = entityPage.getContent().stream().map(departmentPersistenceMapper::toDomain).toList();
-        return new PageResult<>(list, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages())
-;    }
+        return new PageResult<>(list, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
+    }
 }
