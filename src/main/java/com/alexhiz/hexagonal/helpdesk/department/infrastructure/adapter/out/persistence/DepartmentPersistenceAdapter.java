@@ -2,7 +2,12 @@ package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.per
 
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -51,5 +56,16 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
         departmentRepository.deleteById(id);
     }
 
-    
+    @Override
+    public boolean existsByNameAndIdNot(String name, UUID id) {
+        return departmentRepository.existsByNameAndIdNot(name, id);
+    }
+
+    @Override
+    public PageResult<Department> findAllPages(PageQuery pageQuery) {
+        Pageable pageable = PageRequest.of(pageQuery.page(), pageQuery.size());
+        Page<DepartmentEntity> entityPage= departmentRepository.findAll(pageable);
+        List<Department> list = entityPage.getContent().stream().map(departmentPersistenceMapper::toDomain).toList();
+        return new PageResult<>(list, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages())
+;    }
 }

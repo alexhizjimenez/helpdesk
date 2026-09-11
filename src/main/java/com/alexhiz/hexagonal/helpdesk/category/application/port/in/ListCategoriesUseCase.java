@@ -2,8 +2,8 @@ package com.alexhiz.hexagonal.helpdesk.category.application.port.in;
 
 import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 
-import java.util.UUID;
+import java.util.List;
 
-public interface GetCategoryByIdUseCase {
-    Category getCategoryById(UUID id);
+public interface ListCategoriesUseCase {
+    List<Category> getAllCategories();
 }

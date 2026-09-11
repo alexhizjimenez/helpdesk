@@ -24,4 +24,6 @@ public record DepartmentResponse(
                 .updatedAt(department.getUpdatedAt())
                 .build();
     }
+
+
 }

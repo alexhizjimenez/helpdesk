@@ -4,7 +4,8 @@ import com.alexhiz.hexagonal.helpdesk.category.application.port.in.*;
 import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dto.CategoryRequest;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dto.CategoryResponse;
-import com.alexhiz.hexagonal.helpdesk.shared.domain.exception.BusinessException;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CategoryController {
     private  final CreateCategoryUseCase createCategoryUseCase;
-    private  final ListCategoryUseCase listCategoryUseCase;
+    private  final ListCategoriesUseCase listCategoriesUseCase;
     private final GetCategoryByIdUseCase getCategoryByIdUseCase;
     private final UpdateCategoryUseCase updateCategoryUseCase;
     private final DeleteCategoryUseCase deleteCategoryUseCase;
+    private final GetCategoriesByDepartmentUseCase getCategoriesByDepartmentUseCase;
+    private final PageCategoriesUseCase pageCategoriesUseCase;
 
 
     @PostMapping
@@ -33,26 +36,40 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> findAll(){
-        List<CategoryResponse>  list = listCategoryUseCase.getAllCategory().stream().map(CategoryResponse::from).toList();
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(list);
+        List<CategoryResponse>  list = listCategoriesUseCase.getAllCategories().stream().map(CategoryResponse::from).toList();
+        return ResponseEntity.status(HttpStatus.OK).body(list);
     }
 
     @GetMapping("/{id}")
     public  ResponseEntity<CategoryResponse> findById(@PathVariable UUID id){
-        Category category = getCategoryByIdUseCase.getCategoryById(id).orElseThrow(() -> new BusinessException("Category not found"+id));
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(CategoryResponse.from(category));
+        Category category = getCategoryByIdUseCase.getCategoryById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(CategoryResponse.from(category));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(@PathVariable UUID id, @Valid @RequestBody CategoryRequest request){
         Category category = updateCategoryUseCase.update(id, request.toDomain());
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(CategoryResponse.from(category));
+        return ResponseEntity.status(HttpStatus.OK).body(CategoryResponse.from(category));
     }
 
     @DeleteMapping("/{id}")
     public  ResponseEntity<Void> delete(@PathVariable UUID id){
         deleteCategoryUseCase.delete(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping("/department/{id}")
+    public  ResponseEntity<List<CategoryResponse>> getAllCategoriesByDepartment(@PathVariable UUID id){
+        List<CategoryResponse> response = getCategoriesByDepartmentUseCase.getAllCategoriesByDepartment(id).stream().map(CategoryResponse::from).toList();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/pages")
+    public ResponseEntity<PageResult<CategoryResponse>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "2") int size) {
+        PageResult<CategoryResponse> domainPage = pageCategoriesUseCase.execute(new PageQuery(page, size)).map(CategoryResponse::from);
+        return ResponseEntity.status(HttpStatus.OK).body(domainPage);
     }
 
 

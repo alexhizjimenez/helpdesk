@@ -1,28 +1,29 @@
 package com.alexhiz.hexagonal.helpdesk.department.application.service;
 
-import com.alexhiz.hexagonal.helpdesk.department.application.port.in.CreateDepartmentUseCase;
-import com.alexhiz.hexagonal.helpdesk.department.application.port.in.DeleteDepartmentUseCase;
-import com.alexhiz.hexagonal.helpdesk.department.application.port.in.GetDepartmentByIdUseCase;
-import com.alexhiz.hexagonal.helpdesk.department.application.port.in.ListDepartmentsUseCase;
-import com.alexhiz.hexagonal.helpdesk.department.application.port.in.UpdateDepartmentUseCase;
+import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
+import com.alexhiz.hexagonal.helpdesk.department.application.port.in.*;
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentAlreadyExistsException;
+import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.exception.BusinessException;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DepartmentService implements CreateDepartmentUseCase, ListDepartmentsUseCase, GetDepartmentByIdUseCase, UpdateDepartmentUseCase, DeleteDepartmentUseCase {
+public class DepartmentService implements CreateDepartmentUseCase, ListDepartmentsUseCase, GetDepartmentByIdUseCase, UpdateDepartmentUseCase, DeleteDepartmentUseCase, PageDepartmentsUseCase {
 
     private static final String DEPARTMENTS_CACHE_KEY = "departments";
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
@@ -31,15 +32,17 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
+    @Transactional
     public Department create(Department department) {
         if (department.getName() == null || department.getName().trim().isEmpty()) {
             throw new BusinessException("Department name cannot be empty");
-        } 
-
-        if (departmentRepositoryPort.existsByName(department.getName().trim())) {
-            throw new DepartmentAlreadyExistsException(department.getName().trim());
         }
-        
+        var name = department.getName().trim();
+
+        if (departmentRepositoryPort.existsByName(name)) {
+            throw new DepartmentAlreadyExistsException(name);
+        }
+        department.setName(name);
         Department saved = departmentRepositoryPort.save(department);
 
         // Invalidar caché para evitar datos desactualizados
@@ -49,12 +52,13 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
     }
 
     @Override
-    public List<Department> listDepartments() {
-        return getDepartmentsFromCache();
+    public List<Department> getAllDepartments() {
+        return getAllDepartmentsFromCache();
     }
 
     @SuppressWarnings("unchecked")
-    public List<Department> getDepartmentsFromCache() {
+    public List<Department> getAllDepartmentsFromCache() {
+        //completo
         try {
             // 1. Intento de lectura desde la caché de Redis (Cache Hit)
             Object cachedData = redisTemplate.opsForValue().get(DEPARTMENTS_CACHE_KEY);
@@ -93,15 +97,23 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
     }
 
     @Override
-    public Optional<Department> getDepartmentById(UUID id) {
-        return departmentRepositoryPort.findById(id);
+    public Department getDepartmentById(UUID id) {
+        return departmentRepositoryPort.findById(id).orElseThrow(() -> new DepartmentNotFoundException(id));
     }
 
     @Override
-    public Department updateDepartment(UUID id, Department department) {
+    @Transactional
+    public Department update(UUID id, Department department) {
         Department existingDepartment = departmentRepositoryPort.findById(id)
-                .orElseThrow(() -> new BusinessException("Department not found with id: " + id));
-        existingDepartment.setName(department.getName());
+                .orElseThrow(() -> new DepartmentNotFoundException(id));
+        if (department.getName() == null || department.getName().trim().isEmpty()) {
+            throw new BusinessException("Department name cannot be empty");
+        }
+        var  name  = department.getName().trim();
+        if(departmentRepositoryPort.existsByNameAndIdNot(name, id)){
+            throw new DepartmentAlreadyExistsException(name);
+        }
+        existingDepartment.setName(name);
         existingDepartment.setActive(department.getActive());
         Department updated = departmentRepositoryPort.save(existingDepartment);
         evictDepartmentsCache();
@@ -109,12 +121,49 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
     }
 
     @Override
-    public void deleteDepartmentById(UUID id) {
+    @Transactional
+    public void delete(UUID id) {
         if (!departmentRepositoryPort.existsById(id)) {
-            throw new BusinessException("Department not found with id: " + id);
+            throw new DepartmentNotFoundException(id);
         }
         departmentRepositoryPort.delete(id);
         evictDepartmentsCache();
+    }
+
+    @Override
+    public PageResult<Department> execute(PageQuery pageQuery) {
+        log.info("es: {}", pageQuery);
+        return getDepartmentsFromCache(pageQuery);
+    }
+
+    @SuppressWarnings("unchecked")
+    public PageResult<Department> getDepartmentsFromCache(PageQuery pageQuery) {
+        // 1. Crear una clave dinámica según la página y tamaño
+        String cacheKey = DEPARTMENTS_CACHE_KEY + ":page:" + pageQuery.page() + ":size:" + pageQuery.size();
+        try {
+            // 1. Intento de lectura desde la caché de Redis (Cache Hit)
+            Object cachedData = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedData instanceof PageResult<?> cachedPage && !cachedPage.content().isEmpty()) {
+                log.info("Redis Cache HIT: Departamentos recuperados desde la caché key: {} ", cacheKey);
+                return (PageResult<Department>) cachedPage;
+            }
+        } catch (Exception e) {
+            log.error("Error al consultar la caché de Redis, fallback a base de datos: {}", e.getMessage());
+        }
+
+        log.info("Redis Cache MISS: Consultando base de datos para categories paginados");
+        PageResult<Department> pageResult = departmentRepositoryPort.findAllPages(pageQuery);
+
+        try {
+            if (pageResult != null && !pageResult.content().isEmpty()) {
+                redisTemplate.opsForValue().set(cacheKey, pageResult, CACHE_TTL);
+                log.info("Redis Cache UPDATED: Key {} almacenada en caché con TTL de {}", cacheKey, CACHE_TTL);
+            }
+        } catch (Exception e) {
+            log.error("Error al actualizar la caché de Redis: {}", e.getMessage());
+        }
+
+        return pageResult;
     }
 }
 

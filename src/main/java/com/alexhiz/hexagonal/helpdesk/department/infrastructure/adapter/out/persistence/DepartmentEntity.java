@@ -18,7 +18,7 @@ public class DepartmentEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 255, unique = true)
     private String name;
 
     @Column(nullable = false)
@@ -33,6 +33,9 @@ public class DepartmentEntity {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        if (this.active == null) {
+            this.active = true;
+        }
         if (this.updatedAt == null) {
             this.updatedAt = LocalDateTime.now();
         }

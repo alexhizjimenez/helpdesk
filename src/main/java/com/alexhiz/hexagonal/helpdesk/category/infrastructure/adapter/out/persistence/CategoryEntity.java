@@ -1,6 +1,5 @@
 package com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence;
 
-import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -39,7 +38,9 @@ public class CategoryEntity {
     @PrePersist
     public void prePersist(){
         this.createdAt = LocalDateTime.now();
-        this.active = true;
+        if (this.active == null) {
+            this.active = true;
+        }
         if(this.updatedAt == null) {
             this.updatedAt = LocalDateTime.now();
         }
