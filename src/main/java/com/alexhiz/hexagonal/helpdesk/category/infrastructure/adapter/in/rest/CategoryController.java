@@ -6,6 +6,8 @@ import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dt
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dto.CategoryResponse;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +29,12 @@ public class CategoryController {
     private final GetCategoriesByDepartmentUseCase getCategoriesByDepartmentUseCase;
     private final PageCategoriesUseCase pageCategoriesUseCase;
 
-
+    @Operation(
+            summary = "Crea categoria",
+            description = "retorna la categoria creada"
+    )
+    @ApiResponse(responseCode = "200", description = "Categoria creado")
+    @ApiResponse(responseCode = "404", description = "Error al crear categoria")
     @PostMapping
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryRequest request){
         Category category = createCategoryUseCase.create(request.toDomain());
