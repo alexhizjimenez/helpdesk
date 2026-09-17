@@ -15,6 +15,10 @@ public class Sla {
     @EqualsAndHashCode.Include
     private UUID id;
     private String name;
+    private String priority;
+    private String responseTimeMinutes;
+    private String resolutionTimeMinutes;
+    private String active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
