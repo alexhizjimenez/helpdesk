@@ -1,6 +1,5 @@
 package com.alexhiz.hexagonal.helpdesk.department.application.service;
 
-import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 import com.alexhiz.hexagonal.helpdesk.department.application.port.in.*;
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentAlreadyExistsException;
@@ -16,14 +15,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DepartmentService implements CreateDepartmentUseCase, ListDepartmentsUseCase, GetDepartmentByIdUseCase, UpdateDepartmentUseCase, DeleteDepartmentUseCase, PageDepartmentsUseCase {
+public class DepartmentService implements CreateDepartmentUseCase, ListDepartmentsUseCase, GetDepartmentByIdUseCase,
+        UpdateDepartmentUseCase, DeleteDepartmentUseCase, PageDepartmentsUseCase {
 
     private static final String DEPARTMENTS_CACHE_KEY = "departments";
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
@@ -58,7 +57,7 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
 
     @SuppressWarnings("unchecked")
     public List<Department> getAllDepartmentsFromCache() {
-        //completo
+        // completo
         try {
             // 1. Intento de lectura desde la caché de Redis (Cache Hit)
             Object cachedData = redisTemplate.opsForValue().get(DEPARTMENTS_CACHE_KEY);
@@ -109,8 +108,8 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
         if (department.getName() == null || department.getName().trim().isEmpty()) {
             throw new BusinessException("Department name cannot be empty");
         }
-        var  name  = department.getName().trim();
-        if(departmentRepositoryPort.existsByNameAndIdNot(name, id)){
+        var name = department.getName().trim();
+        if (departmentRepositoryPort.existsByNameAndIdNot(name, id)) {
             throw new DepartmentAlreadyExistsException(name);
         }
         existingDepartment.setName(name);
@@ -166,4 +165,3 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
         return pageResult;
     }
 }
-
