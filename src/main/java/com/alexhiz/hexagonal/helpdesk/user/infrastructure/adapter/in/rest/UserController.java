@@ -1,6 +1,5 @@
 package com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.in.rest;
 
-import com.alexhiz.hexagonal.helpdesk.category.application.port.in.UpdateCategoryUseCase;
 import com.alexhiz.hexagonal.helpdesk.department.application.port.in.GetDepartmentByIdUseCase;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
@@ -46,17 +45,17 @@ public class UserController {
     @GetMapping("/pages")
     @Operation(summary = "Obtiene usuarios paginados", description = "Obtiene una página de usuarios usando los parámetros de paginación")
     @ApiResponse(responseCode = "200", description = "Página de usuarios obtenida correctamente")
-    public ResponseEntity<PageResult<UserResponse>> getAllPages(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "2") int size){
-        PageResult<UserResponse> response = pageUsersUseCase.execute(new PageQuery(page,size)).map(this::toResponse);
+    public ResponseEntity<PageResult<UserResponse>> getAllPages(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "2") int size) {
+        PageResult<UserResponse> response = pageUsersUseCase.execute(new PageQuery(page, size)).map(this::toResponse);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtiene un usuario", description = "Busca un usuario por su identificador")
     @ApiResponse(responseCode = "200", description = "Usuario obtenido correctamente")
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
-    public ResponseEntity<UserResponse> getById(@PathVariable UUID id){
+    public ResponseEntity<UserResponse> getById(@PathVariable UUID id) {
         User user = getUserByIdUseCase.getUserById(id);
         return ResponseEntity.status(HttpStatus.OK).body(toResponse(user));
     }
@@ -65,7 +64,7 @@ public class UserController {
     @Operation(summary = "Actualiza un usuario", description = "Actualiza los datos de un usuario existente")
     @ApiResponse(responseCode = "200", description = "Usuario actualizado correctamente")
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest request){
+    public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest request) {
         User user = updateUserUseCase.update(id, request.toDomain());
         return ResponseEntity.status(HttpStatus.OK).body(toResponse(user));
     }
@@ -74,7 +73,7 @@ public class UserController {
     @Operation(summary = "Elimina un usuario", description = "Elimina un usuario por su identificador")
     @ApiResponse(responseCode = "204", description = "Usuario eliminado correctamente")
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id){
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         deleteUserUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
