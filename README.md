@@ -1,6 +1,6 @@
 # 🎫 Helpdesk API - Arquitectura Hexagonal Modular
 
-Backend del sistema **Helpdesk** desarrollado con **Java 21** y **Spring Boot 4.1.0**, diseñado bajo los principios de **Arquitectura Hexagonal (Puertos y Adaptadores)** y estructurado por características o subdominios (**Package-by-Feature / Monolito Modular**), con persistencia en **PostgreSQL** y capa de caché distribuida con **Redis**.
+Backend del sistema **Helpdesk** desarrollado con **Java 21** y **Spring Boot 4.1.0**, diseñado bajo los principios de **Arquitectura Hexagonal (Puertos y Adaptadores)** y estructurado por características o subdominios (**Package-by-Feature / Monolito Modular**). Actualmente incluye módulos REST funcionales para departamentos, categorías, roles y usuarios, con persistencia en **PostgreSQL** y caché distribuida con **Redis**.
 
 ---
 
@@ -21,10 +21,10 @@ Backend del sistema **Helpdesk** desarrollado con **Java 21** y **Spring Boot 4.
 
 **Helpdesk API** es una solución backend para la administración integral de mesas de ayuda, soporte técnico y atención de tickets. Permite gestionar:
 - Usuarios, roles y asignación departamental.
-- Ciclo de vida completo de tickets de soporte y atención.
-- Categorías, prioridades y acuerdos de nivel de servicio (SLA).
-- Notificaciones y mecanismos de autenticación y autorización.
-- Caché de alto rendimiento para consultas recurrentes.
+- Departamentos y categorías, incluyendo consultas paginadas.
+- Caché de alto rendimiento para consultas recurrentes de departamentos y categorías.
+
+Los módulos de tickets, SLA, notificaciones y autenticación están preparados en la estructura del proyecto, pero todavía no exponen casos de uso ni endpoints REST funcionales.
 
 ---
 
@@ -102,34 +102,15 @@ src/main/java/com/alexhiz/hexagonal/helpdesk/
 │       └── adapter/
 │           ├── in/rest/                 # DepartmentController & DTOs (Request/Response)
 │           └── out/persistence/         # Entity, JPA Repository, Adapter & Mapper
+
+├── category/                            # Subdominio de Categorías (CRUD + filtro + paginación)
+├── role/                                # Subdominio de Roles (CRUD)
+├── user/                                # Subdominio de Usuarios (CRUD + paginación)
 │
-├── role/                                # Subdominio de Roles
-│   ├── domain/model/Role.java
-│   ├── application/
-│   │   ├── port/in/CreateRoleUseCase.java
-│   │   ├── port/out/RoleRepositoryPort.java
-│   │   └── service/RoleService.java
-│   └── infrastructure/
-│       └── adapter/
-│           ├── in/rest/RoleController.java
-│           └── out/persistence/
-│
-├── user/                                # Subdominio de Usuarios (Integración Inter-Módulos)
-│   ├── domain/model/User.java
-│   ├── application/
-│   │   ├── port/in/CreateUserUseCase.java
-│   │   ├── port/out/UserRepositoryPort.java
-│   │   └── service/UserService.java
-│   └── infrastructure/
-│       └── adapter/
-│           ├── in/rest/UserController.java
-│           └── out/persistence/
-│
-├── ticket/                              # Subdominio de Tickets (Mesa de ayuda)
-├── category/                            # Subdominio de Categorías
+├── ticket/                              # Estructura inicial de Tickets
 ├── sla/                                 # Subdominio de Acuerdos de Nivel de Servicio
-├── notification/                        # Subdominio de Notificaciones
-└── auth/                                # Subdominio de Autenticación y Seguridad
+├── notification/                        # Estructura inicial de Notificaciones
+└── auth/                                # Estructura inicial de Autenticación
 ```
 
 ---
@@ -139,14 +120,14 @@ src/main/java/com/alexhiz/hexagonal/helpdesk/
 | Módulo | Estado | Descripción |
 |---|:---:|---|
 | **`shared`** | 🟢 Activo | Excepciones base, manejador global de errores (`@RestControllerAdvice`) y configuración de Redis. |
-| **`department`** | 🟢 Completo | CRUD total (Crear, Listar, Obtener por ID, Actualizar, Eliminar) con patrón **Cache-Aside** en Redis. |
-| **`role`** | 🟢 Activo | Gestión y persistencia de roles del sistema. |
-| **`user`** | 🟢 Activo | Gestión de usuarios con validación cruzada y resolución de departamentos y roles vía puertos de salida. |
-| **`ticket`** | 🔨 Estructurado | Creación, seguimiento, transiciones de estado, prioridad y resolución de tickets. |
-| **`category`** | 🔨 Estructurado | Clasificación y categorización de requerimientos. |
-| **`sla`** | 🔨 Estructurado | Reglas de tiempos máximos para primera respuesta y resolución. |
-| **`notification`** | 🔨 Estructurado | Mecanismo de envío de alertas y notificaciones por eventos. |
-| **`auth`** | 🔨 Estructurado | Autenticación, generación y validación de tokens JWT y permisos. |
+| **`department`** | 🟢 Funcional | CRUD, paginación y caché **Cache-Aside** con Redis. |
+| **`category`** | 🟢 Funcional | CRUD, paginación, validación de departamento y filtro por departamento. |
+| **`role`** | 🟢 Funcional | CRUD de roles del sistema. |
+| **`user`** | 🟢 Funcional | CRUD, paginación y validación de relaciones con departamentos y roles. |
+| **`ticket`** | 🔨 En preparación | Estructura inicial sin controlador REST ni casos de uso implementados. |
+| **`sla`** | 🔨 En preparación | Estructura inicial sin controlador REST ni casos de uso implementados. |
+| **`notification`** | 🔨 En preparación | Estructura inicial sin controlador REST ni casos de uso implementados. |
+| **`auth`** | 🔨 En preparación | Estructura inicial sin autenticación JWT ni endpoints implementados. |
 
 ---
 
@@ -159,8 +140,9 @@ src/main/java/com/alexhiz/hexagonal/helpdesk/
 | `POST` | `/api/departments` | Crea un nuevo departamento | `201 Created` |
 | `GET` | `/api/departments` | Lista departamentos (con caché Redis) | `200 OK` |
 | `GET` | `/api/departments/{id}` | Obtiene un departamento por ID | `200 OK` |
-| `PUT` | `/api/departments/{id}` | Actualiza un departamento e invalida caché | `202 Accepted` |
+| `PUT` | `/api/departments/{id}` | Actualiza un departamento e invalida caché | `200 OK` |
 | `DELETE` | `/api/departments/{id}` | Elimina un departamento e invalida caché | `204 No Content` |
+| `GET` | `/api/departments/pages?page=0&size=2` | Lista departamentos de forma paginada | `200 OK` |
 
 #### Ejemplo Payload: Crear / Actualizar Departamento
 ```json
@@ -176,7 +158,11 @@ src/main/java/com/alexhiz/hexagonal/helpdesk/
 
 | Método | Endpoint | Descripción | Código Éxito |
 |---|---|---|:---:|
-| `POST` | `/api/roles/` | Crea un nuevo rol | `201 Created` |
+| `POST` | `/api/roles` | Crea un nuevo rol | `201 Created` |
+| `GET` | `/api/roles` | Lista todos los roles | `200 OK` |
+| `GET` | `/api/roles/{id}` | Obtiene un rol por ID | `200 OK` |
+| `PUT` | `/api/roles/{id}` | Actualiza un rol | `202 Accepted` |
+| `DELETE` | `/api/roles/{id}` | Elimina un rol | `204 No Content` |
 
 #### Ejemplo Payload: Crear Rol
 ```json
@@ -191,7 +177,11 @@ src/main/java/com/alexhiz/hexagonal/helpdesk/
 
 | Método | Endpoint | Descripción | Código Éxito |
 |---|---|---|:---:|
-| `POST` | `/api/users/` | Crea un usuario asignando departamento y roles | `201 Created` |
+| `POST` | `/api/users` | Crea un usuario asignando departamento y roles | `201 Created` |
+| `GET` | `/api/users/pages?page=0&size=2` | Lista usuarios de forma paginada | `200 OK` |
+| `GET` | `/api/users/{id}` | Obtiene un usuario por ID | `200 OK` |
+| `PUT` | `/api/users/{id}` | Actualiza un usuario | `200 OK` |
+| `DELETE` | `/api/users/{id}` | Elimina un usuario | `204 No Content` |
 
 #### Ejemplo Payload: Crear Usuario
 ```json
@@ -207,18 +197,30 @@ src/main/java/com/alexhiz/hexagonal/helpdesk/
 }
 ```
 
+### 🗂️ Categorías (`/api/categories`)
+
+| Método | Endpoint | Descripción | Código Éxito |
+|---|---|---|:---:|
+| `POST` | `/api/categories` | Crea una categoría asociada a un departamento | `201 Created` |
+| `GET` | `/api/categories` | Lista todas las categorías | `200 OK` |
+| `GET` | `/api/categories/{id}` | Obtiene una categoría por ID | `200 OK` |
+| `PUT` | `/api/categories/{id}` | Actualiza una categoría | `200 OK` |
+| `DELETE` | `/api/categories/{id}` | Elimina una categoría | `204 No Content` |
+| `GET` | `/api/categories/department/{id}` | Lista categorías activas de un departamento | `200 OK` |
+| `GET` | `/api/categories/pages?page=0&size=2` | Lista categorías de forma paginada | `200 OK` |
+
 ---
 
 ## ⚡ Estrategia de Caché con Redis
 
-El módulo de departamentos implementa el patrón **Cache-Aside** con serialización JSON polimórfica:
+Los módulos de departamentos y categorías implementan el patrón **Cache-Aside** con serialización JSON polimórfica. Las consultas paginadas utilizan claves independientes por página y tamaño.
 
-1. **Lectura (`GET /api/departments`):**
-   - **Cache Hit:** Si la clave `departments` existe en Redis, se retornan los datos directamente en milisegundos sin tocar PostgreSQL.
-   - **Cache Miss:** Si no existe, consulta la base de datos PostgreSQL, almacena la lista en Redis con un **TTL de 10 minutos**, y retorna la respuesta.
-   - **Resiliencia / Fallback:** Si el servidor Redis no está disponible o presenta problemas de conexión, la aplicación captura la excepción en log y consulta la base de datos de manera transparente sin interrumpir el servicio.
+1. **Lectura:** En una consulta completa, se revisan las claves `departments` o `categories`. Para una consulta paginada se usa una clave con el formato `recurso:page:{page}:size:{size}`.
+  - **Cache Hit:** Si la clave existe en Redis, se retornan los datos sin consultar PostgreSQL.
+  - **Cache Miss:** Si no existe, se consulta PostgreSQL y se almacena el resultado en Redis con un **TTL de 10 minutos**.
+  - **Resiliencia / Fallback:** Si el servidor Redis no está disponible o presenta problemas de conexión, la aplicación captura la excepción en log y consulta la base de datos de manera transparente sin interrumpir el servicio.
 2. **Invalidación (`Eviction`):**
-   - Al ejecutar `create()`, `updateDepartment()` o `deleteDepartmentById()`, se invoca `evictDepartmentsCache()` para purgar la clave `departments` de Redis y garantizar que las lecturas posteriores no sirvan datos desactualizados.
+  - Al crear, actualizar o eliminar departamentos o categorías, se invalida la caché correspondiente para evitar datos desactualizados.
 
 ---
 
@@ -230,6 +232,7 @@ El módulo de departamentos implementa el patrón **Cache-Aside** con serializac
   - Spring Data JPA
   - Spring Data Redis
   - Spring Validation (Jakarta Validation)
+- **Documentación de API:** Springdoc OpenAPI 3 (`/swagger-ui.html` y `/v3/api-docs`)
 - **Bases de Datos & Caché:**
   - **PostgreSQL** (Almacenamiento relacional principal)
   - **Redis** (Caché en memoria distribuida)
@@ -280,7 +283,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
       timeout: 2000
   cache:
     type: redis
@@ -291,7 +294,14 @@ server:
   port: 8080
 ```
 
-### 2. Compilar y Ejecutar
+### 2. Documentación Swagger
+
+Con la aplicación en ejecución, la documentación interactiva está disponible en:
+
+- `http://localhost:8080/swagger-ui.html`
+- `http://localhost:8080/v3/api-docs`
+
+### 3. Compilar y Ejecutar
 
 ```bash
 # Compilar el proyecto y verificar pruebas
