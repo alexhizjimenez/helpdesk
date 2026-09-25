@@ -1,6 +1,20 @@
 spring:
   application:
     name: helpdesk
+#  Base de datos H2
+#  datasource:
+#    url: jdbc:h2:mem:inventorydb
+#    driver-class-name: org.h2.Driver
+#    username: sa
+#    password: password
+#  jpa:
+#    database-platform: org.hibernate.dialect.H2Dialect
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#  h2:
+#    console:
+#      enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/helpdesk
     username: postgres
