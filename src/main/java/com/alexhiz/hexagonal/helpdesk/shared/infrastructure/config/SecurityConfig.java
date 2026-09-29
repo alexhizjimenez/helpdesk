@@ -26,7 +26,11 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request ->
-                        request.anyRequest().permitAll())
+                        request.requestMatchers("/api/roles/**").hasRole("ADMIN")
+                                .requestMatchers("/api/departments/**").hasRole("ADMIN")
+                                .requestMatchers("/api/categories/**").hasRole("ADMIN")
+                                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                                .anyRequest().permitAll())
                 .build();
     }
 

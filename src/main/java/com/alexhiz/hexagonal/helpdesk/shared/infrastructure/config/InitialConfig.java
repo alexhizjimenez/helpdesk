@@ -8,8 +8,12 @@ import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistenc
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.PermissionRepository;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.RoleEntity;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.RoleRepository;
+import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserEntity;
+import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,6 +26,7 @@ public class InitialConfig implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final DepartmentRepository departmentRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -72,26 +77,6 @@ public class InitialConfig implements CommandLineRunner {
                 auditRead
         ));
 
-        RoleEntity admin = RoleEntity.builder().name(RoleEnum.ADMIN).permissions(Set.of(ticketCreate,
-                ticketReadOwn,
-                ticketCommentAdd,
-                ticketCloseOwn,
-                ticketReopen,
-                ticketReadAssigned,
-                ticketClaim,
-                ticketStatusUpdate,
-                ticketResolve,
-                ticketAssign,
-                ticketReassign,
-                ticketReadTeam,
-                metricsRead,
-                priorityManage,
-                userManage,
-                agentManage,
-                categoryManage,
-                departmentManage,
-                slaManage,
-                auditRead)).build();
         RoleEntity agent = RoleEntity.builder().name(RoleEnum.AGENT).permissions(Set.of(
                 ticketReadAssigned,
                 ticketClaim,
@@ -115,10 +100,44 @@ public class InitialConfig implements CommandLineRunner {
                 ticketCommentAdd,
                 ticketCloseOwn,
                 ticketReopen)).build();
+
+        RoleEntity admin = RoleEntity.builder().name(RoleEnum.ADMIN).permissions(Set.of(ticketCreate,
+                ticketReadOwn,
+                ticketCommentAdd,
+                ticketCloseOwn,
+                ticketReopen,
+                ticketReadAssigned,
+                ticketClaim,
+                ticketStatusUpdate,
+                ticketResolve,
+                ticketAssign,
+                ticketReassign,
+                ticketReadTeam,
+                metricsRead,
+                priorityManage,
+                userManage,
+                agentManage,
+                categoryManage,
+                departmentManage,
+                slaManage,
+                auditRead)).build();
+
         roleRepository.saveAll(List.of(admin,agent,supervisor,user));
 
         DepartmentEntity departmentEntity = DepartmentEntity.builder().name("SOCIAL6").active(true).build();
-        departmentRepository.save(departmentEntity);
+        DepartmentEntity savedDepartment = departmentRepository.save(departmentEntity);
+
+        UserEntity u = UserEntity.builder()
+                .fullName("Alexis Jimenez")
+                .email("alexhizdev@gmail.com")
+                .username("alexhizdev")
+                .password(new BCryptPasswordEncoder().encode("password123"))
+                .phone("9511234567")
+                .departmentId(savedDepartment.getId())
+                .roles(Set.of(admin))
+                .build();
+
+        userRepository.save(u);
 
     }
 }
