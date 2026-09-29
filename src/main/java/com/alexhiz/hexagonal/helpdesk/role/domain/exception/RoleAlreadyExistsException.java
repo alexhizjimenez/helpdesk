@@ -1,9 +1,10 @@
 package com.alexhiz.hexagonal.helpdesk.role.domain.exception;
 
+import com.alexhiz.hexagonal.helpdesk.role.domain.model.RoleEnum;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.exception.ResourceAlreadyExistsException;
 
 public class RoleAlreadyExistsException extends ResourceAlreadyExistsException {
-    public RoleAlreadyExistsException(String name) {
+    public RoleAlreadyExistsException(RoleEnum name) {
         super("Role already exists with name: " + name);
     }
 }

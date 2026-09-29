@@ -29,12 +29,12 @@ public class RoleService implements CreateRoleUseCase, GetRoleByIdUseCase, Updat
 
     @Override
     public Role create(Role role) {
-        if (role.getName() == null || role.getName().trim().isEmpty()) {
+        if (role.getName() == null) {
             throw new BusinessException("Role name cannot be empty");
         }
 
-        if (roleRepositoryPort.existsByName(role.getName().trim())) {
-            throw new RoleAlreadyExistsException(role.getName().trim());
+        if (roleRepositoryPort.existsByName(role.getName())) {
+            throw new RoleAlreadyExistsException(role.getName());
         }
         evictRolesCache();
         return roleRepositoryPort.save(role);

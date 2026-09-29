@@ -1,43 +1,34 @@
 package com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence;
 
+import com.alexhiz.hexagonal.helpdesk.role.domain.model.PermissionEnum;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.RoleEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "permissions")
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RoleEntity {
+public class PermissionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, length = 100, unique = true)
     @Enumerated(EnumType.STRING)
-    private RoleEnum name;
+    private PermissionEnum name;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @ManyToMany
-    @JoinTable(
-            name = "role_permissions",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
-    private Set<PermissionEntity> permissions = new HashSet<>();
 
     @PrePersist
     public void prePersist() {

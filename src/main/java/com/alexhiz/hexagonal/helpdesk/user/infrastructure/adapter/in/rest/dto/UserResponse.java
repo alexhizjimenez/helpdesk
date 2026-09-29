@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public record UserResponse(
         UUID id,
         String fullName,
+        String username,
         String email,
         String phone,
         //UUID departmentId,
@@ -28,6 +29,7 @@ public record UserResponse(
         return UserResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 //.departmentId(user.getDepartmentId())
