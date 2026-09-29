@@ -39,15 +39,19 @@ public class UserEntity {
     @Column(name = "department_id")
     private UUID departmentId;
 
+    @Builder.Default
     @Column(name = "is_account_non_expired", nullable = false, columnDefinition = "boolean default true")
     private boolean isAccountNonExpired = true;
 
+    @Builder.Default
     @Column(name = "is_account_non_locked", nullable = false, columnDefinition = "boolean default true")
     private boolean isAccountNonLocked = true;
 
+    @Builder.Default
     @Column(name = "is_credentials_non_expired", nullable = false, columnDefinition = "boolean default true")
     private boolean isCredentialsNonExpired = true;
 
+    @Builder.Default
     @Column(name = "is_enabled", nullable = false, columnDefinition = "boolean default true")
     private boolean isEnabled = true;
 

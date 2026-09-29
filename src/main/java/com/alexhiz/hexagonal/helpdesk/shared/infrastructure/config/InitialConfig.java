@@ -1,5 +1,7 @@
 package com.alexhiz.hexagonal.helpdesk.shared.infrastructure.config;
 
+import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
+import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentRepository;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.PermissionEnum;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.RoleEnum;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.PermissionEntity;
@@ -19,6 +21,7 @@ public class InitialConfig implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final DepartmentRepository departmentRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -113,6 +116,9 @@ public class InitialConfig implements CommandLineRunner {
                 ticketCloseOwn,
                 ticketReopen)).build();
         roleRepository.saveAll(List.of(admin,agent,supervisor,user));
+
+        DepartmentEntity departmentEntity = DepartmentEntity.builder().name("SOCIAL6").active(true).build();
+        departmentRepository.save(departmentEntity);
 
     }
 }

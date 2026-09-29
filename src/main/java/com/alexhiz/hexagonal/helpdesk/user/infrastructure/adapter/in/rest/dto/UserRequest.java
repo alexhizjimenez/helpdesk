@@ -5,6 +5,7 @@ import com.alexhiz.hexagonal.helpdesk.user.domain.model.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Set;
 import java.util.UUID;
@@ -32,12 +33,13 @@ public record UserRequest(
 
         Set<UUID> roleIds
 ) {
+    //no jala la autorizacion
     public User toDomain() {
         return User.builder()
                 .fullName(fullName)
                 .email(email)
                 .username(username)
-                .password(password)
+                .password(new BCryptPasswordEncoder().encode(password))
                 .phone(phone)
                 .departmentId(departmentId)
                 .roles(roleIds != null

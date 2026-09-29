@@ -23,10 +23,14 @@ public class User {
     private String password;
     private String phone;
     private UUID departmentId;
-    private boolean isEnabled;
-    private boolean isAccountNonExpired;
-    private boolean isAccountNonLocked;
-    private boolean isCredentialsNonExpired;
+    @Builder.Default
+    private boolean isEnabled = true;
+    @Builder.Default
+    private boolean isAccountNonExpired = true;
+    @Builder.Default
+    private boolean isAccountNonLocked = true;
+    @Builder.Default
+    private boolean isCredentialsNonExpired = true;
     private Set<Role> roles;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
