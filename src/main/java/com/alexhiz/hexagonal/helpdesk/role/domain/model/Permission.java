@@ -17,4 +17,10 @@ public class Permission {
     private PermissionEnum name;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Override
+    public String toString() {
+        var n = PermissionEnum.valueOf(name.toString());
+        return n.toString();
+    }
 }
