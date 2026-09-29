@@ -22,7 +22,6 @@ import java.util.UUID;
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
 @Tag(name = "Roles", description = "Operaciones para gestionar los roles")
-@PreAuthorize("hasRole('ADMIN')")
 public class RoleController {
 
     private final CreateRoleUseCase createRoleUseCase;
