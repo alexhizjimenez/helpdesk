@@ -2,6 +2,7 @@ package com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persisten
 
 import com.alexhiz.hexagonal.helpdesk.role.application.port.out.RoleRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.Role;
+import com.alexhiz.hexagonal.helpdesk.role.domain.model.RoleEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -35,7 +36,7 @@ public class RolePersistenceAdapter implements RoleRepositoryPort {
     }
 
     @Override
-    public boolean existsByName(String name) {
+    public boolean existsByName(RoleEnum name) {
         return roleRepository.existsByName(name);
     }
 

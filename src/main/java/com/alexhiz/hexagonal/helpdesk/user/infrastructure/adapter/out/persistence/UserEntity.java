@@ -27,6 +27,9 @@ public class UserEntity {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String username;
+
     @Column(nullable = false)
     private String password;
 
@@ -35,6 +38,18 @@ public class UserEntity {
 
     @Column(name = "department_id")
     private UUID departmentId;
+
+    @Column(name = "is_account_non_expired", nullable = false, columnDefinition = "boolean default true")
+    private boolean isAccountNonExpired = true;
+
+    @Column(name = "is_account_non_locked", nullable = false, columnDefinition = "boolean default true")
+    private boolean isAccountNonLocked = true;
+
+    @Column(name = "is_credentials_non_expired", nullable = false, columnDefinition = "boolean default true")
+    private boolean isCredentialsNonExpired = true;
+
+    @Column(name = "is_enabled", nullable = false, columnDefinition = "boolean default true")
+    private boolean isEnabled = true;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

@@ -19,9 +19,14 @@ public class User {
     private UUID id;
     private String fullName;
     private String email;
+    private String username;
     private String password;
     private String phone;
     private UUID departmentId;
+    private boolean isEnabled;
+    private boolean isAccountNonExpired;
+    private boolean isAccountNonLocked;
+    private boolean isCredentialsNonExpired;
     private Set<Role> roles;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

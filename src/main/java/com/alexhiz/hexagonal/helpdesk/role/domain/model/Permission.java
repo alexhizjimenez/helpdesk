@@ -3,7 +3,6 @@ package com.alexhiz.hexagonal.helpdesk.role.domain.model;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -12,11 +11,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Role {
+public class Permission {
     @EqualsAndHashCode.Include
     private UUID id;
-    private RoleEnum name;
+    private PermissionEnum name;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Set<Permission> permissions;
 }
