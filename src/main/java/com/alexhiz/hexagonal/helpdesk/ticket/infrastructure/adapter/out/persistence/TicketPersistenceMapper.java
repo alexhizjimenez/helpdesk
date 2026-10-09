@@ -1,6 +1,9 @@
 package com.alexhiz.hexagonal.helpdesk.ticket.infrastructure.adapter.out.persistence;
 
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
 import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.Ticket;
+import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketPriority;
+import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -10,7 +13,7 @@ public class TicketPersistenceMapper {
         if(ticket == null) return null;
         return TicketEntity.builder()
                 .id(ticket.getId()).ticketNumber(ticket.getTicketNumber()).title(ticket.getTitle())
-                .description(ticket.getDescription()).status(ticket.getStatus()).priority(ticket.getPriority()).categoryId(ticket.getCategoryId())
+                .description(ticket.getDescription()).status(ticket.getStatus()).priority(TicketPriority.valueOf(ticket.getPriority().toString())).categoryId(ticket.getCategoryId())
                 .departmentId(ticket.getDepartmentId()).createdBy(ticket.getCreatedBy()).assignedTo(ticket.getAssignedTo()).slaPolicyId(ticket.getSlaPolicyId())
                 .openedAt(ticket.getOpenedAt()).assignedAt(ticket.getAssignedAt()).resolvedAt(ticket.getResolvedAt()).closedAt(ticket.getClosedAt())
                 .dueAt(ticket.getDueAt()).createdAt(ticket.getCreatedAt()).updatedAt(ticket.getUpdatedAt()).build();
@@ -20,7 +23,7 @@ public class TicketPersistenceMapper {
     public Ticket toDomain(TicketEntity ticketEntity){
         if(ticketEntity == null) return null;
         return Ticket.builder().id(ticketEntity.getId()).ticketNumber(ticketEntity.getTicketNumber()).title(ticketEntity.getTitle())
-                .description(ticketEntity.getDescription()).status(ticketEntity.getStatus()).priority(ticketEntity.getPriority())
+                .description(ticketEntity.getDescription()).status(ticketEntity.getStatus()).priority(TicketPriority.valueOf(ticketEntity.getPriority().toString()))
                 .categoryId(ticketEntity.getCategoryId()).departmentId(ticketEntity.getDepartmentId()).createdBy(ticketEntity.getCreatedBy())
                 .assignedTo(ticketEntity.getAssignedTo()).slaPolicyId(ticketEntity.getSlaPolicyId()).openedAt(ticketEntity.getOpenedAt())
                 .assignedAt(ticketEntity.getAssignedAt()).resolvedAt(ticketEntity.getResolvedAt()).closedAt(ticketEntity.getClosedAt())

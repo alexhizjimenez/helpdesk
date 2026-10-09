@@ -16,6 +16,8 @@ public class TicketService implements CreateTicketUseCase {
 
     @Override
     public Ticket createTicket(Ticket ticket) {
+        log.info("Creating a new ticket : {}", ticket);
+
         if(ticketRepositoryPort.existsByTicketNumber(ticket.getTicketNumber())){
             throw new TicketAlreadyExistsException(ticket.getTicketNumber());
         }

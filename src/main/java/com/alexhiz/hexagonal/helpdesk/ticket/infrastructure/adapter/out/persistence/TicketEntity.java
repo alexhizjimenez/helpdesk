@@ -3,6 +3,7 @@ package com.alexhiz.hexagonal.helpdesk.ticket.infrastructure.adapter.out.persist
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
 import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketPriority;
 import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketStatus;
 import jakarta.persistence.*;
@@ -48,6 +49,11 @@ public class TicketEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
+
+    @Column (nullable = false, length = 255)
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private TicketPriority priority;
 
     private UUID categoryId;
 

@@ -40,12 +40,8 @@ public record TicketRequest(
                         .title(title)
                         .ticketNumber("ticket_num"+ new Random().nextLong(100, 10000))
                         .description(description)
-                        .status(status)
                         .categoryId(categoryId)
                         .departmentId(departmentId)
-                        .createdBy(createdBy)
-                        .assignedTo(assignedTo)
-                        .slaPolicyId(slaPolicyId)
                         .build();
         }
 }
