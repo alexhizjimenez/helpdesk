@@ -3,17 +3,13 @@ package com.alexhiz.hexagonal.helpdesk.ticket.infrastructure.adapter.out.persist
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketPriority;
+import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketStatus;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -40,7 +36,7 @@ public class TicketEntity {
     private String ticketNumber;
 
     @Column (nullable = false, length = 255)
-    @NotBlank(message = "title number is required")
+    @NotBlank(message = "title  is required")
     @Size (min = 3, max = 255)
     private String title;
 
@@ -49,12 +45,9 @@ public class TicketEntity {
     private String description;
 
     @Column (nullable = false, length = 255)
-    @NotBlank(message = "status number is required")
-    private String status;
-
-    @Column (nullable = false, length = 255)
-    @NotBlank(message = "priority number is required")
-    private String priority;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private TicketStatus status;
 
     private UUID categoryId;
 
@@ -71,7 +64,7 @@ public class TicketEntity {
     private LocalDateTime openedAt;
 
     @CreationTimestamp
-    @Column (name = "assigned_at", nullable = false, updatable = false)
+    @Column (name = "assigned_at")
     private LocalDateTime assignedAt;
 
     @Column (name = "resolved_at", nullable = true)
@@ -101,10 +94,6 @@ public class TicketEntity {
 
         if(this.openedAt == null){
             this.openedAt = now;
-        }
-
-        if(this.assignedAt == null){
-            this.assignedAt = now;
         }
     }
 

@@ -8,6 +8,9 @@ import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistenc
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.PermissionRepository;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.RoleEntity;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.RoleRepository;
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
+import com.alexhiz.hexagonal.helpdesk.sla.infrastructure.adapter.out.persistence.SlaEntity;
+import com.alexhiz.hexagonal.helpdesk.sla.infrastructure.adapter.out.persistence.SlaRepository;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserEntity;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +18,17 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Componente de inicialización del sistema (Data Seeder / Runner).
+ * Implementa CommandLineRunner para ejecutarse automáticamente una vez que el contexto de Spring Boot ha iniciado.
+ * Se encarga de poblar la base de datos con información base inicial:
+ * Permisos, Roles con sus asignaciones, Departamentos, Usuarios predeterminados y Políticas SLA.
+ */
 @Component
 @RequiredArgsConstructor
 public class InitialConfig implements CommandLineRunner {
@@ -27,117 +37,172 @@ public class InitialConfig implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final SlaRepository slaRepository;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Punto de entrada principal ejecutado al arrancar la aplicación.
+     * Toda la secuencia se ejecuta bajo una transacción (@Transactional) para asegurar consistencia;
+     * orquesta el orden de creación respetando las dependencias de negocio (permisos -> roles -> departamentos -> usuarios -> SLAs).
+     */
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
-        PermissionEntity ticketCreate = PermissionEntity.builder().name(PermissionEnum.TICKET_CREATE).build();
-        PermissionEntity ticketReadOwn = PermissionEntity.builder().name(PermissionEnum.TICKET_READ_OWN).build();
-        PermissionEntity ticketCommentAdd = PermissionEntity.builder().name(PermissionEnum.TICKET_COMMENT_ADD).build();
-        PermissionEntity ticketCloseOwn = PermissionEntity.builder().name(PermissionEnum.TICKET_CLOSE_OWN).build();
-        PermissionEntity ticketReopen = PermissionEntity.builder().name(PermissionEnum.TICKET_REOPEN).build();
+        Map<PermissionEnum, PermissionEntity> p = seedPermissions();
+        Map<RoleEnum, RoleEntity> roles = seedRoles(p);
+        DepartmentEntity department = seedDepartment("SOCIAL6");
+        seedUsers(department, roles);
+        seedSlas();
+    }
 
-        PermissionEntity ticketReadAssigned = PermissionEntity.builder().name(PermissionEnum.TICKET_READ_ASSIGNED).build();
-        PermissionEntity ticketClaim = PermissionEntity.builder().name(PermissionEnum.TICKET_CLAIM).build();
-        PermissionEntity ticketStatusUpdate = PermissionEntity.builder().name(PermissionEnum.TICKET_STATUS_UPDATE).build();
-        PermissionEntity ticketResolve = PermissionEntity.builder().name(PermissionEnum.TICKET_RESOLVE).build();
+    /**
+     * Inicializa los permisos del sistema iterando sobre todos los valores de PermissionEnum.
+     * Si un permiso no existe en la base de datos, lo crea y lo persiste.
+     * 
+     * @return Mapa asociativo de cada enum PermissionEnum con su respectiva PermissionEntity persistida.
+     */
+    private Map<PermissionEnum, PermissionEntity> seedPermissions() {
+        Map<PermissionEnum, PermissionEntity> map = new EnumMap<>(PermissionEnum.class);
+        for (PermissionEnum name : PermissionEnum.values()) {
+            PermissionEntity entity = permissionRepository.findByName(name)
+                    .orElseGet(() -> permissionRepository.save(
+                            PermissionEntity.builder().name(name).build()));
+            map.put(name, entity);
+        }
+        return map;
+    }
 
-        PermissionEntity ticketAssign = PermissionEntity.builder().name(PermissionEnum.TICKET_ASSIGN).build();
-        PermissionEntity ticketReassign = PermissionEntity.builder().name(PermissionEnum.TICKET_REASSIGN).build();
-        PermissionEntity ticketReadTeam = PermissionEntity.builder().name(PermissionEnum.TICKET_READ_TEAM).build();
-        PermissionEntity metricsRead = PermissionEntity.builder().name(PermissionEnum.METRICS_READ).build();
-        PermissionEntity priorityManage = PermissionEntity.builder().name(PermissionEnum.PRIORITY_MANAGE).build();
+    /**
+     * Define y persiste la matriz de roles y sus correspondientes permisos:
+     * - USER: Permisos básicos para crear y gestionar sus propios tickets.
+     * - AGENT: Permisos para reclamar, resolver y ver tickets asignados o de su equipo.
+     * - SUPERVISOR: Permisos de agente más asignación/reasignación, métricas, SLAs y auditoría.
+     * - ADMIN: Acceso total a todos los permisos del sistema.
+     * 
+     * Corrige el tipo de dato: se busca en roleRepository pasando directamente la instancia RoleEnum,
+     * evitando pasar String ("USER") que genera error de incompatibilidad de tipos con Hibernate.
+     * 
+     * @param p Mapa con los permisos ya persistidos en base de datos.
+     * @return Mapa de roles con sus entidades RoleEntity persistidas.
+     */
+    private Map<RoleEnum, RoleEntity> seedRoles(Map<PermissionEnum, PermissionEntity> p) {
+        Map<RoleEnum, Set<PermissionEntity>> definition = new EnumMap<>(RoleEnum.class);
 
-        PermissionEntity userManage = PermissionEntity.builder().name(PermissionEnum.USER_MANAGE).build();
-        PermissionEntity agentManage = PermissionEntity.builder().name(PermissionEnum.AGENT_MANAGE).build();
-        PermissionEntity categoryManage = PermissionEntity.builder().name(PermissionEnum.CATEGORY_MANAGE).build();
-        PermissionEntity departmentManage = PermissionEntity.builder().name(PermissionEnum.DEPARTMENT_MANAGE).build();
-        PermissionEntity slaManage = PermissionEntity.builder().name(PermissionEnum.SLA_MANAGE).build();
-        PermissionEntity auditRead = PermissionEntity.builder().name(PermissionEnum.AUDIT_READ).build();
+        definition.put(RoleEnum.USER, perms(p,
+                PermissionEnum.TICKET_CREATE,
+                PermissionEnum.TICKET_READ_OWN,
+                PermissionEnum.TICKET_COMMENT_ADD,
+                PermissionEnum.TICKET_CLOSE_OWN,
+                PermissionEnum.TICKET_REOPEN));
 
-        permissionRepository.saveAll(List.of(
-                ticketCreate,
-                ticketReadOwn,
-                ticketCommentAdd,
-                ticketCloseOwn,
-                ticketReopen,
-                ticketReadAssigned,
-                ticketClaim,
-                ticketStatusUpdate,
-                ticketResolve,
-                ticketAssign,
-                ticketReassign,
-                ticketReadTeam,
-                metricsRead,
-                priorityManage,
-                userManage,
-                agentManage,
-                categoryManage,
-                departmentManage,
-                slaManage,
-                auditRead
-        ));
+        definition.put(RoleEnum.AGENT, perms(p,
+                PermissionEnum.TICKET_READ_ASSIGNED,
+                PermissionEnum.TICKET_CLAIM,
+                PermissionEnum.TICKET_STATUS_UPDATE,
+                PermissionEnum.TICKET_RESOLVE,
+                PermissionEnum.TICKET_COMMENT_ADD,
+                PermissionEnum.TICKET_READ_TEAM));
 
-        RoleEntity agent = RoleEntity.builder().name(RoleEnum.AGENT).permissions(Set.of(
-                ticketReadAssigned,
-                ticketClaim,
-                ticketStatusUpdate,
-                ticketResolve,
-                ticketCommentAdd,
-                ticketReadTeam
-        )).build();
-        RoleEntity supervisor = RoleEntity.builder().name(RoleEnum.SUPERVISOR).permissions(Set.of(ticketReadAssigned,
-                ticketClaim,
-                ticketStatusUpdate,
-                ticketResolve,
-                ticketAssign,
-                ticketReassign,
-                ticketReadTeam,
-                metricsRead,
-                priorityManage,
-                auditRead)).build();
-        RoleEntity user = RoleEntity.builder().name(RoleEnum.USER).permissions(Set.of( ticketCreate,
-                ticketReadOwn,
-                ticketCommentAdd,
-                ticketCloseOwn,
-                ticketReopen)).build();
+        definition.put(RoleEnum.SUPERVISOR, perms(p,
+                PermissionEnum.TICKET_READ_ASSIGNED,
+                PermissionEnum.TICKET_CLAIM,
+                PermissionEnum.TICKET_STATUS_UPDATE,
+                PermissionEnum.TICKET_RESOLVE,
+                PermissionEnum.TICKET_ASSIGN,
+                PermissionEnum.TICKET_REASSIGN,
+                PermissionEnum.TICKET_READ_TEAM,
+                PermissionEnum.METRICS_READ,
+                PermissionEnum.PRIORITY_MANAGE,
+                PermissionEnum.AUDIT_READ));
+        definition.put(RoleEnum.ADMIN, new HashSet<>(p.values())); // todos los permisos
 
-        RoleEntity admin = RoleEntity.builder().name(RoleEnum.ADMIN).permissions(Set.of(ticketCreate,
-                ticketReadOwn,
-                ticketCommentAdd,
-                ticketCloseOwn,
-                ticketReopen,
-                ticketReadAssigned,
-                ticketClaim,
-                ticketStatusUpdate,
-                ticketResolve,
-                ticketAssign,
-                ticketReassign,
-                ticketReadTeam,
-                metricsRead,
-                priorityManage,
-                userManage,
-                agentManage,
-                categoryManage,
-                departmentManage,
-                slaManage,
-                auditRead)).build();
+        Map<RoleEnum, RoleEntity> result = new EnumMap<>(RoleEnum.class);
+        definition.forEach((roleName, permissions) -> {
+            RoleEntity role = roleRepository.findByName(roleName)
+                    .orElseGet(() -> roleRepository.save(
+                            RoleEntity.builder().name(roleName).permissions(permissions).build()));
+            result.put(roleName, role);
+        });
+        return result;
+    }
 
-        roleRepository.saveAll(List.of(admin,agent,supervisor,user));
+    /**
+     * Función utilitaria que convierte una lista variable de PermissionEnum en un Set de PermissionEntity,
+     * recuperando las entidades ya persistidas desde el mapa en memoria.
+     */
+    private Set<PermissionEntity> perms(Map<PermissionEnum, PermissionEntity> p, PermissionEnum... names) {
+        return Arrays.stream(names).map(p::get).collect(Collectors.toSet());
+    }
 
-        DepartmentEntity departmentEntity = DepartmentEntity.builder().name("SOCIAL6").active(true).build();
-        DepartmentEntity savedDepartment = departmentRepository.save(departmentEntity);
+    /**
+     * Crea un departamento inicial si no existe en la base de datos (por ejemplo, "SOCIAL6")
+     * y lo establece como activo por defecto.
+     * 
+     * @param name Nombre del departamento a crear o consultar.
+     * @return Entidad DepartmentEntity persistida.
+     */
+    private DepartmentEntity seedDepartment(String name) {
+        return departmentRepository.findByName(name)
+                .orElseGet(() -> departmentRepository.save(
+                        DepartmentEntity.builder().name(name).active(true).build()));
+    }
 
-        UserEntity u = UserEntity.builder()
-                .fullName("Alexis Jimenez")
-                .email("alexhizdev@gmail.com")
-                .username("alexhizdev")
-                .password(new BCryptPasswordEncoder().encode("password123"))
-                .phone("9511234567")
-                .departmentId(savedDepartment.getId())
-                .roles(Set.of(admin))
-                .build();
+    /**
+     * Registra los usuarios iniciales del sistema (un administrador y un usuario general),
+     * vinculándolos a su departamento y asignándoles el rol correspondiente.
+     * 
+     * @param department Departamento al que pertenecerán los usuarios iniciales.
+     * @param roles Mapa de roles para obtener las entidades de ADMIN y USER.
+     */
+    private void seedUsers(DepartmentEntity department, Map<RoleEnum, RoleEntity> roles) {
+        createUserIfAbsent("alexhizdev", "Alexis Jimenez", "alexhizdev@gmail.com",
+                "9511234567", department, roles.get(RoleEnum.ADMIN));
+        createUserIfAbsent("antonio", "antonio joaquin", "antonio@gmail.com",
+                "9713488633", department, roles.get(RoleEnum.USER));
+    }
 
-        userRepository.save(u);
+    /**
+     * Registra un usuario si su nombre de usuario no existe previamente en la base de datos.
+     * La contraseña se encripta de forma segura mediante BCrypt antes de almacenarla.
+     */
+    private void createUserIfAbsent(String username, String fullName, String email,
+                                    String phone, DepartmentEntity department, RoleEntity role) {
+        if (userRepository.existsByUsername(username)) return;
+        userRepository.save(UserEntity.builder()
+                .fullName(fullName)
+                .email(email)
+                .username(username)
+                .password(passwordEncoder.encode("password123"))
+                .phone(phone)
+                .departmentId(department.getId())
+                .roles(Set.of(role))
+                .build());
+    }
 
+    /**
+     * Inicializa las políticas de SLA (Service Level Agreements) predeterminadas para los cuatro
+     * niveles de prioridad: LOW, MEDIUM, HIGH y CRITICAL, especificando tiempos de respuesta y resolución en minutos.
+     */
+    private void seedSlas() {
+        createSlaIfAbsent("SLA Low", SlaPriotity.LOW, "240", "1440");
+        createSlaIfAbsent("SLA Medium", SlaPriotity.MEDIUM, "120", "720");
+        createSlaIfAbsent("SLA High", SlaPriotity.HIGH, "60", "240");
+        createSlaIfAbsent("SLA Critical", SlaPriotity.CRITICAL, "30", "120");
+    }
+
+    /**
+     * Comprueba si ya existe una política de SLA para una prioridad dada; si no existe,
+     * la construye y la almacena con su estado activo.
+     */
+    private void createSlaIfAbsent(String name, SlaPriotity priority,
+                                   String responseMin, String resolutionMin) {
+        if (slaRepository.existsByPriority(priority)) return;
+        slaRepository.save(SlaEntity.builder()
+                .name(name)
+                .priority(priority)
+                .responseTimeMinutes(responseMin)
+                .resolutionTimeMinutes(resolutionMin)
+                .active("true")
+                .build());
     }
 }

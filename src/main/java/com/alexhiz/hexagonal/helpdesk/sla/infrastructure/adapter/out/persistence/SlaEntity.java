@@ -3,14 +3,8 @@ package com.alexhiz.hexagonal.helpdesk.sla.infrastructure.adapter.out.persistenc
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,8 +27,9 @@ public class SlaEntity {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false, length = 150)
-    private String priority;
+    private SlaPriotity priority;
 
     @Column(name = "response_time_minutes", nullable = false)
     private String responseTimeMinutes;

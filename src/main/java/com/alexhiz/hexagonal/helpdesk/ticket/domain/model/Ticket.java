@@ -21,9 +21,9 @@ public class Ticket {
 
     private String description;
 
-    private String status;
+    private TicketStatus status;
 
-    private String priority;
+    private TicketPriority priority;
 
     private UUID categoryId;
 
