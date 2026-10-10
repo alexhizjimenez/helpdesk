@@ -17,6 +17,7 @@ public interface UserRepositoryPort {
     PageResult<User> findAllPages(PageQuery pageQuery);
 
     boolean existsByEmailAndIdNot(String email, UUID id);
-    
+    Optional<User> findByUsername(String username);
+
 
 }

@@ -1,5 +1,6 @@
 package com.alexhiz.hexagonal.helpdesk.sla.infrastructure.adapter.out.persistence;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
@@ -13,4 +14,6 @@ public interface SlaRepository extends JpaRepository<SlaEntity, UUID> {
     boolean existsByNameAndIdNot(String name, UUID id);
 
     boolean existsByPriority(SlaPriotity priority);
+
+    Optional<SlaEntity> findByPriority(SlaPriotity name);
 }

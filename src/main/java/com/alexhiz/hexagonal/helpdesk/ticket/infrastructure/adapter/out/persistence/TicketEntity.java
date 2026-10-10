@@ -69,8 +69,7 @@ public class TicketEntity {
     @Column (name = "opened_at", nullable = false, updatable = false)
     private LocalDateTime openedAt;
 
-    @CreationTimestamp
-    @Column (name = "assigned_at")
+    @Column (name = "assigned_at", nullable = true)
     private LocalDateTime assignedAt;
 
     @Column (name = "resolved_at", nullable = true)

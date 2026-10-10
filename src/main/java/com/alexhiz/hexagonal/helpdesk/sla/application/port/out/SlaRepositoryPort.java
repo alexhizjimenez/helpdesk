@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.alexhiz.hexagonal.helpdesk.sla.domain.model.Sla;
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
 
 public interface SlaRepositoryPort {
     Sla save(Sla sla);
@@ -20,4 +21,6 @@ public interface SlaRepositoryPort {
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, UUID id);
+
+    Optional<Sla> getByPriority(SlaPriotity priotity);
 }

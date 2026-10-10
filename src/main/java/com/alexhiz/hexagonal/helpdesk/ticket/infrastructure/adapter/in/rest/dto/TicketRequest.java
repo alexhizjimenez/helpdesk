@@ -39,6 +39,8 @@ public record TicketRequest(
                 return Ticket.builder()
                         .title(title)
                         .ticketNumber("ticket_num"+ new Random().nextLong(100, 10000))
+                        .priority(priority)
+                        .status(TicketStatus.OPEN)
                         .description(description)
                         .categoryId(categoryId)
                         .departmentId(departmentId)
