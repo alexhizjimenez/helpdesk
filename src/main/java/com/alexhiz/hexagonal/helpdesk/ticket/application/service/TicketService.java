@@ -1,13 +1,17 @@
 package com.alexhiz.hexagonal.helpdesk.ticket.application.service;
 
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
+import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
 import com.alexhiz.hexagonal.helpdesk.sla.application.port.out.SlaRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.sla.domain.exception.SlaNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.sla.domain.model.Sla;
 import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
 import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.CreateTicketUseCase;
+import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.PageTicketsUseCase;
 import com.alexhiz.hexagonal.helpdesk.ticket.application.port.out.TicketRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.ticket.domain.exception.TicketAlreadyExistsException;
 import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.Ticket;
+import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.TicketListItem;
 import com.alexhiz.hexagonal.helpdesk.user.application.port.out.UserRepositoryPort;
 import com.alexhiz.hexagonal.helpdesk.user.domain.exception.UserNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.user.domain.model.User;
@@ -24,7 +28,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TicketService implements CreateTicketUseCase {
+public class TicketService implements CreateTicketUseCase, PageTicketsUseCase {
     private final TicketRepositoryPort ticketRepositoryPort;
     private final SlaRepositoryPort slaRepositoryPort;
     private final UserRepositoryPort userRepositoryPort;
@@ -51,6 +55,11 @@ public class TicketService implements CreateTicketUseCase {
         ticket.setSlaPolicyId(sla.getId());
         ticket.setAssignedAt(LocalDateTime.now());
         ticket.setCreatedBy(user.getId());
-       return ticketRepositoryPort.saveTicket(ticket);
+        return ticketRepositoryPort.saveTicket(ticket);
+    }
+
+    @Override
+    public PageResult<TicketListItem> execute(PageQuery pageQuery) {
+        return ticketRepositoryPort.findAllPages(pageQuery);
     }
 }

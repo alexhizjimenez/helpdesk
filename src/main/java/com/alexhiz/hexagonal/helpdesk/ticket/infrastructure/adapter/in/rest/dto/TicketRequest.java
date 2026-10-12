@@ -38,7 +38,7 @@ public record TicketRequest(
         public Ticket toDomain() {
                 return Ticket.builder()
                         .title(title)
-                        .ticketNumber("ticket_num"+ new Random().nextLong(100, 10000))
+                        .ticketNumber(String.valueOf(new Random().nextLong(10,100000)))
                         .priority(priority)
                         .status(TicketStatus.OPEN)
                         .description(description)
