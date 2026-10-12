@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
 import org.springframework.stereotype.Repository;
 
 import com.alexhiz.hexagonal.helpdesk.sla.application.port.out.SlaRepositoryPort;
@@ -51,6 +52,11 @@ public class SlaPersistenceAdapter implements SlaRepositoryPort {
     @Override
     public boolean existsByNameAndIdNot(String name, UUID id) {
         return slaRepository.existsByNameAndIdNot(name, id);
+    }
+
+    @Override
+    public Optional<Sla> getByPriority(SlaPriotity priotity) {
+        return slaRepository.findByPriority(priotity).map(slaPersistenceMapper::toDomain);
     }
 
 }

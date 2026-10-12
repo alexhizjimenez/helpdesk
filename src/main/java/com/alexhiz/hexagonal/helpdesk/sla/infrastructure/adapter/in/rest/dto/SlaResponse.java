@@ -5,13 +5,14 @@ import java.util.UUID;
 
 import com.alexhiz.hexagonal.helpdesk.sla.domain.model.Sla;
 
+import com.alexhiz.hexagonal.helpdesk.sla.domain.model.SlaPriotity;
 import lombok.Builder;
 
 @Builder
 public record SlaResponse(
         UUID id,
         String name,
-        String priority,
+        SlaPriotity priority,
         String responseTimeMinutes,
         String resolutionTimeMinutes,
         String active,
