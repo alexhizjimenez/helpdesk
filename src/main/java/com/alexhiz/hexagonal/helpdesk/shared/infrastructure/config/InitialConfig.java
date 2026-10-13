@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,7 +48,7 @@ public class InitialConfig implements CommandLineRunner {
      * orquesta el orden de creación respetando las dependencias de negocio (permisos -> roles -> departamentos -> usuarios -> SLAs).
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = {IOException.class, SQLException.class})
     public void run(String... args) throws Exception {
         Map<PermissionEnum, PermissionEntity> p = seedPermissions();
         Map<RoleEnum, RoleEntity> roles = seedRoles(p);
