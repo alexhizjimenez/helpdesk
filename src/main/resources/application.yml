@@ -39,6 +39,13 @@ spring:
     redis:
       time-to-live: 60000
 
+security:
+  jwt:
+    key:
+      private: "1562655bc5ed482d78d8782a84cb1575b123a8d5d55e9373e413e0e0e0a0afe8"
+    auth:
+      user: "AUTH0JWT-BACKEND"
+
 
 server:
   port: 8080
