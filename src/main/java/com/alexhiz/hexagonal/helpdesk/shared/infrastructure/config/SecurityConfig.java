@@ -37,14 +37,16 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
-                                .requestMatchers("/api/roles/**").hasRole("ADMIN")
-                                .requestMatchers("/api/departments/**").hasRole("ADMIN")
-                                .requestMatchers("/api/categories/**").hasRole("ADMIN")
-                                .requestMatchers("/api/users/**").hasRole("ADMIN")
-                                .requestMatchers("/api/tickets/**").hasRole("ADMIN")
-                                .anyRequest().permitAll())
-                .addFilterBefore(new JwtTokenValidator(jwtUtils), BasicAuthenticationFilter.class)
+                        request.anyRequest().permitAll())
+//                        request.requestMatchers(
+//                                HttpMethod.POST, "/auth/**").permitAll()
+//                                .requestMatchers("/api/roles/**").hasRole("ADMIN")
+//                                .requestMatchers("/api/departments/**").hasRole("ADMIN")
+//                                .requestMatchers("/api/categories/**").hasRole("ADMIN")
+//                                .requestMatchers("/api/users/**").hasRole("ADMIN")
+//                                .requestMatchers("/api/tickets/**").hasRole("ADMIN")
+//                                .anyRequest().permitAll())
+                //.addFilterBefore(new JwtTokenValidator(jwtUtils), BasicAuthenticationFilter.class)
                 .build();
     }
 

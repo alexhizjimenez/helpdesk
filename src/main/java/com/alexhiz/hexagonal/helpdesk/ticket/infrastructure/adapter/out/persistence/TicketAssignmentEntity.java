@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ticket_attachments")
+@Table(name = "ticket_assignments")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,21 +19,15 @@ public class TicketAssignmentEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name="ticket_id")
-    private TicketEntity ticket;
+    private UUID ticket;
 
-    @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name="assigned_to")
-    private UserEntity assignedTo;
+    private UUID assignedTo;
 
-    @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name="assigned_by")
-    private UserEntity assignedBy;
+    private UUID assignedBy;
 
     @Column(name = "assigned_at", nullable = false, updatable = false)
     private LocalDateTime assignedAt;
-    @Column(name = "unassigned_at", nullable = false, updatable = false)
+    @Column(name = "unassigned_at", nullable = true)
     private LocalDateTime unassignedAt;
     private String reason;
 }
