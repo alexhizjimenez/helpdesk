@@ -1,5 +1,6 @@
 package com.alexhiz.hexagonal.helpdesk.user.infrastructure.security;
 
+import com.alexhiz.hexagonal.helpdesk.auth.infrastructure.adapter.in.rest.dto.AuthResponse;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserEntity;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,4 +33,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         log.info(":{}",authorityList);
         return new User(userEntity.getUsername(), userEntity.getPassword(), userEntity.isEnabled(),userEntity.isAccountNonExpired(), userEntity.isCredentialsNonExpired(), userEntity.isAccountNonLocked(), authorityList);
     }
+
 }
