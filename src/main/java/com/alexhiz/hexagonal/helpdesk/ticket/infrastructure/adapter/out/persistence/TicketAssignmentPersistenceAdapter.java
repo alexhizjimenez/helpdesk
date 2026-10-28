@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Repository
 @RequiredArgsConstructor
 @Slf4j
@@ -17,5 +20,15 @@ public class TicketAssignmentPersistenceAdapter implements TicketAssignmentRepos
     public TicketAssignment saveTicketAssignment(TicketAssignment ticketAssignment) {
         TicketAssignmentEntity tay =  ticketAssignmentRepository.save(ticketAssignmentPersistenceMapper.toEntity(ticketAssignment));
         return ticketAssignmentPersistenceMapper.toDomain(tay);
+    }
+
+    @Override
+    public boolean existTicketAssignmentForTicketId(UUID id) {
+        return ticketAssignmentRepository.existsByTicket(id);
+    }
+
+    @Override
+    public Optional<TicketAssignment> getTicketAssignmentForTicketId(UUID id) {
+        return ticketAssignmentRepository.findTicketAssignmentByTicket(id).map(ticketAssignmentPersistenceMapper::toDomain);
     }
 }

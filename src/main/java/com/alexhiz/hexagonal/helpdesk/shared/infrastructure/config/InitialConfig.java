@@ -1,5 +1,7 @@
 package com.alexhiz.hexagonal.helpdesk.shared.infrastructure.config;
 
+import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryEntity;
+import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryRepository;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentRepository;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.PermissionEnum;
@@ -38,6 +40,7 @@ public class InitialConfig implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final DepartmentRepository departmentRepository;
+    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final SlaRepository slaRepository;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -55,6 +58,7 @@ public class InitialConfig implements CommandLineRunner {
         DepartmentEntity department = seedDepartment("SOCIAL6");
         seedUsers(department, roles);
         seedSlas();
+        seedCategories();
     }
 
     /**
@@ -72,6 +76,26 @@ public class InitialConfig implements CommandLineRunner {
             map.put(name, entity);
         }
         return map;
+    }
+
+    private void seedCategories() {
+        createCategoryIfAbsent("Recursos Humanos", "Gestión de personal, talento humano, contratación y clima laboral.");
+        createCategoryIfAbsent("Tecnologías de la Información (IT)", "Soporte técnico, desarrollo de software, infraestructura y ciberseguridad.");
+        createCategoryIfAbsent("Finanzas y Contabilidad", "Control financiero, presupuestos, contabilidad, facturación y auditoría.");
+        createCategoryIfAbsent("Ventas y Comercial", "Gestión de clientes, prospección, estrategias comerciales y cierre de ventas.");
+        createCategoryIfAbsent("Marketing y Comunicación", "Publicidad, manejo de redes sociales, branding y relaciones públicas.");
+        createCategoryIfAbsent("Operaciones y Logística", "Cadena de suministro, control de inventarios y gestión de procesos operativos.");
+    }
+
+    /**
+     * Comprueba si ya existe una categoría por su nombre; si no existe,
+     * la construye y la almacena.
+     */
+    private void createCategoryIfAbsent(String name, String description) {
+        if (categoryRepository.existsByName(name)) return;
+        categoryRepository.save(CategoryEntity.builder()
+                .name(name)
+                .build());
     }
 
     /**

@@ -22,6 +22,7 @@ import java.util.UUID;
 public class TicketPersistenceAdapter implements TicketRepositoryPort {
     private final TicketPersistenceMapper ticketPersistenceMapper;
     private final TicketRepository ticketRepository;
+    private final TicketHistoryRepository ticketHistoryRepository;
 
     @Override
     public Ticket saveTicket(Ticket ticket) {
