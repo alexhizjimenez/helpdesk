@@ -6,10 +6,7 @@ import com.alexhiz.hexagonal.helpdesk.department.application.port.in.GetDepartme
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
-import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.AssignTicketUseCase;
-import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.ChangeStatusTicketUseCase;
-import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.CreateTicketUseCase;
-import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.PageTicketsUseCase;
+import com.alexhiz.hexagonal.helpdesk.ticket.application.port.in.*;
 import com.alexhiz.hexagonal.helpdesk.ticket.domain.model.Ticket;
 import com.alexhiz.hexagonal.helpdesk.ticket.infrastructure.adapter.in.rest.dto.AssignTicketRequest;
 import com.alexhiz.hexagonal.helpdesk.ticket.infrastructure.adapter.in.rest.dto.TicketRequest;
@@ -37,6 +34,7 @@ public class TicketController {
     private final GetDepartmentByIdUseCase getDepartmentByIdUseCase;
     private final AssignTicketUseCase assignTicketUseCase;
     private final ChangeStatusTicketUseCase changeStatusTicketUseCase;
+    private final UnassignedTicketUseCase unassignedTicketUseCase;
 
     @PostMapping
     @Operation(summary = "Crea un ticket", description = "Crea un nuevo ticket")
@@ -60,6 +58,12 @@ public class TicketController {
     @PatchMapping("/{ticketId}/assign")
     private ResponseEntity<TicketResponse>  assign(@PathVariable UUID ticketId, @Valid @RequestBody AssignTicketRequest request){
         Ticket ticket = assignTicketUseCase.assignTicket(ticketId, request.assingId());
+        return ResponseEntity.status(HttpStatus.OK).body(toResponse(ticket));
+    }
+
+    @PatchMapping("/{ticketId}/unassigned")
+    private ResponseEntity<TicketResponse>  assign(@PathVariable UUID ticketId){
+        Ticket ticket = unassignedTicketUseCase.unassignedTicket(ticketId);
         return ResponseEntity.status(HttpStatus.OK).body(toResponse(ticket));
     }
 

@@ -25,7 +25,7 @@ public class TicketAssignmentEntity {
 
     private UUID assignedBy;
 
-    @Column(name = "assigned_at", nullable = false, updatable = false)
+    @Column(name = "assigned_at", nullable = true)
     private LocalDateTime assignedAt;
     @Column(name = "unassigned_at", nullable = true)
     private LocalDateTime unassignedAt;
