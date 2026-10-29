@@ -4,6 +4,8 @@ import com.alexhiz.hexagonal.helpdesk.category.application.port.in.*;
 import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dto.CategoryRequest;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dto.CategoryResponse;
+import com.alexhiz.hexagonal.helpdesk.department.application.port.in.GetDepartmentByIdUseCase;
+import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +32,7 @@ public class CategoryController {
     private final DeleteCategoryUseCase deleteCategoryUseCase;
     private final GetCategoriesByDepartmentUseCase getCategoriesByDepartmentUseCase;
     private final PageCategoriesUseCase pageCategoriesUseCase;
+    private final GetDepartmentByIdUseCase getDepartmentByIdUseCase;
 
     @Operation(
             summary = "Crea categoria",
@@ -41,14 +44,14 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryRequest request){
         Category category = createCategoryUseCase.create(request.toDomain());
-        return ResponseEntity.status(HttpStatus.CREATED).body(CategoryResponse.from(category));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(category));
     }
 
     @GetMapping
     @Operation(summary = "Lista las categorías", description = "Obtiene todas las categorías registradas")
     @ApiResponse(responseCode = "200", description = "Categorías obtenidas correctamente")
     public ResponseEntity<List<CategoryResponse>> findAll(){
-        List<CategoryResponse>  list = listCategoriesUseCase.getAllCategories().stream().map(CategoryResponse::from).toList();
+        List<CategoryResponse>  list = listCategoriesUseCase.getAllCategories().stream().map(this::toResponse).toList();
         return ResponseEntity.status(HttpStatus.OK).body(list);
     }
 
@@ -58,7 +61,7 @@ public class CategoryController {
     @ApiResponse(responseCode = "404", description = "Categoría no encontrada")
     public  ResponseEntity<CategoryResponse> findById(@PathVariable UUID id){
         Category category = getCategoryByIdUseCase.getCategoryById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(CategoryResponse.from(category));
+        return ResponseEntity.status(HttpStatus.OK).body(toResponse(category));
     }
 
     @PutMapping("/{id}")
@@ -67,7 +70,7 @@ public class CategoryController {
     @ApiResponse(responseCode = "404", description = "Categoría o departamento no encontrado")
     public ResponseEntity<CategoryResponse> update(@PathVariable UUID id, @Valid @RequestBody CategoryRequest request){
         Category category = updateCategoryUseCase.update(id, request.toDomain());
-        return ResponseEntity.status(HttpStatus.OK).body(CategoryResponse.from(category));
+        return ResponseEntity.status(HttpStatus.OK).body(toResponse(category));
     }
 
     @DeleteMapping("/{id}")
@@ -84,7 +87,7 @@ public class CategoryController {
     @ApiResponse(responseCode = "200", description = "Categorías obtenidas correctamente")
     @ApiResponse(responseCode = "404", description = "Departamento no encontrado")
     public  ResponseEntity<List<CategoryResponse>> getAllCategoriesByDepartment(@PathVariable UUID id){
-        List<CategoryResponse> response = getCategoriesByDepartmentUseCase.getAllCategoriesByDepartment(id).stream().map(CategoryResponse::from).toList();
+        List<CategoryResponse> response = getCategoriesByDepartmentUseCase.getAllCategoriesByDepartment(id).stream().map(this::toResponse).toList();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -94,10 +97,18 @@ public class CategoryController {
     public ResponseEntity<PageResult<CategoryResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "2") int size) {
-        PageResult<CategoryResponse> domainPage = pageCategoriesUseCase.execute(new PageQuery(page, size)).map(CategoryResponse::from);
+        PageResult<CategoryResponse> domainPage = pageCategoriesUseCase.execute(new PageQuery(page, size)).map(this::toResponse);
         return ResponseEntity.status(HttpStatus.OK).body(domainPage);
     }
 
+
+    private CategoryResponse toResponse(Category category) {
+        Department department = category.getDepartmentId() == null
+                ? null
+                : getDepartmentByIdUseCase.getDepartmentById(category.getDepartmentId());
+
+        return CategoryResponse.from(category, department);
+    }
 
 
 }

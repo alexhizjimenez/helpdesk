@@ -1,5 +1,6 @@
 package com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence;
 
+import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,8 +23,9 @@ public class CategoryEntity {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(name = "department_id")
-    private UUID departmentId;
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private DepartmentEntity department;
 
     @Column(nullable = false)
     private Boolean active;
