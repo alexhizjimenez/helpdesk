@@ -2,6 +2,7 @@ package com.alexhiz.hexagonal.helpdesk.shared.infrastructure.config;
 
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryEntity;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryRepository;
+import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentRepository;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.PermissionEnum;
@@ -55,18 +56,15 @@ public class InitialConfig implements CommandLineRunner {
     public void run(String... args) throws Exception {
         Map<PermissionEnum, PermissionEntity> p = seedPermissions();
         Map<RoleEnum, RoleEntity> roles = seedRoles(p);
-        DepartmentEntity department = seedDepartment("SOCIAL6");
+        seedDepartments();
+        seedCategories();
+        DepartmentEntity department = departmentRepository.findByName("IT").orElseThrow(()->new DepartmentNotFoundException("IT"));
         seedUsers(department, roles);
         seedSlas();
-        seedCategories();
+
     }
 
-    /**
-     * Inicializa los permisos del sistema iterando sobre todos los valores de PermissionEnum.
-     * Si un permiso no existe en la base de datos, lo crea y lo persiste.
-     * 
-     * @return Mapa asociativo de cada enum PermissionEnum con su respectiva PermissionEntity persistida.
-     */
+
     private Map<PermissionEnum, PermissionEntity> seedPermissions() {
         Map<PermissionEnum, PermissionEntity> map = new EnumMap<>(PermissionEnum.class);
         for (PermissionEnum name : PermissionEnum.values()) {
@@ -79,38 +77,31 @@ public class InitialConfig implements CommandLineRunner {
     }
 
     private void seedCategories() {
-        createCategoryIfAbsent("Recursos Humanos", "Gestión de personal, talento humano, contratación y clima laboral.");
-        createCategoryIfAbsent("Tecnologías de la Información (IT)", "Soporte técnico, desarrollo de software, infraestructura y ciberseguridad.");
-        createCategoryIfAbsent("Finanzas y Contabilidad", "Control financiero, presupuestos, contabilidad, facturación y auditoría.");
-        createCategoryIfAbsent("Ventas y Comercial", "Gestión de clientes, prospección, estrategias comerciales y cierre de ventas.");
-        createCategoryIfAbsent("Marketing y Comunicación", "Publicidad, manejo de redes sociales, branding y relaciones públicas.");
-        createCategoryIfAbsent("Operaciones y Logística", "Cadena de suministro, control de inventarios y gestión de procesos operativos.");
+        DepartmentEntity it = departmentRepository.findByName("IT").orElseThrow(()->new DepartmentNotFoundException("IT"));
+        DepartmentEntity finance = departmentRepository.findByName("FINANCE").orElseThrow(()->new DepartmentNotFoundException("FINANCE"));
+        DepartmentEntity hr = departmentRepository.findByName("HR").orElseThrow(()->new DepartmentNotFoundException("HR"));
+        DepartmentEntity sales = departmentRepository.findByName("SALES").orElseThrow(()->new DepartmentNotFoundException("SALES"));
+        DepartmentEntity operations = departmentRepository.findByName("OPERATIONS").orElseThrow(()->new DepartmentNotFoundException("OPERATIONS"));
+
+        createCategoryIfAbsent("HARDWARE", "Gestión, mantenimiento, reparación y soporte de equipos de cómputo y dispositivos físicos.", it);
+        createCategoryIfAbsent("SOFTWARE", "Instalación, actualización, desarrollo y solución de problemas en aplicaciones y sistemas operativos.",it);
+        createCategoryIfAbsent("NETWORK", "Administración, conectividad, configuración y mantenimiento de redes locales, internet y telecomunicaciones.",it);
+        createCategoryIfAbsent("ACCESS", "Control de accesos, gestión de credenciales, permisos de usuario y autenticación de sistemas.",it);
+        createCategoryIfAbsent("SECURITY", "Ciberseguridad, protección de datos, prevención de amenazas y políticas de seguridad informática.",it);
+        createCategoryIfAbsent("DATABASE", "Administración, respaldo, optimización y mantenimiento de bases de datos corporativas.",operations);
+        createCategoryIfAbsent("OTHER", "Requerimientos, incidencias o solicitudes de soporte tecnológico general que no encajan en las demás categorías.",hr);
     }
 
-    /**
-     * Comprueba si ya existe una categoría por su nombre; si no existe,
-     * la construye y la almacena.
-     */
-    private void createCategoryIfAbsent(String name, String description) {
+
+    private void createCategoryIfAbsent(String name, String description, DepartmentEntity department) {
         if (categoryRepository.existsByName(name)) return;
         categoryRepository.save(CategoryEntity.builder()
                 .name(name)
+                .department(department)
                 .build());
     }
 
-    /**
-     * Define y persiste la matriz de roles y sus correspondientes permisos:
-     * - USER: Permisos básicos para crear y gestionar sus propios tickets.
-     * - AGENT: Permisos para reclamar, resolver y ver tickets asignados o de su equipo.
-     * - SUPERVISOR: Permisos de agente más asignación/reasignación, métricas, SLAs y auditoría.
-     * - ADMIN: Acceso total a todos los permisos del sistema.
-     * 
-     * Corrige el tipo de dato: se busca en roleRepository pasando directamente la instancia RoleEnum,
-     * evitando pasar String ("USER") que genera error de incompatibilidad de tipos con Hibernate.
-     * 
-     * @param p Mapa con los permisos ya persistidos en base de datos.
-     * @return Mapa de roles con sus entidades RoleEntity persistidas.
-     */
+
     private Map<RoleEnum, RoleEntity> seedRoles(Map<PermissionEnum, PermissionEntity> p) {
         Map<RoleEnum, Set<PermissionEntity>> definition = new EnumMap<>(RoleEnum.class);
 
@@ -152,34 +143,32 @@ public class InitialConfig implements CommandLineRunner {
         return result;
     }
 
-    /**
-     * Función utilitaria que convierte una lista variable de PermissionEnum en un Set de PermissionEntity,
-     * recuperando las entidades ya persistidas desde el mapa en memoria.
-     */
+
     private Set<PermissionEntity> perms(Map<PermissionEnum, PermissionEntity> p, PermissionEnum... names) {
         return Arrays.stream(names).map(p::get).collect(Collectors.toSet());
     }
 
-    /**
-     * Crea un departamento inicial si no existe en la base de datos (por ejemplo, "SOCIAL6")
-     * y lo establece como activo por defecto.
-     * 
-     * @param name Nombre del departamento a crear o consultar.
-     * @return Entidad DepartmentEntity persistida.
-     */
+
     private DepartmentEntity seedDepartment(String name) {
         return departmentRepository.findByName(name)
                 .orElseGet(() -> departmentRepository.save(
                         DepartmentEntity.builder().name(name).active(true).build()));
     }
 
-    /**
-     * Registra los usuarios iniciales del sistema (un administrador y un usuario general),
-     * vinculándolos a su departamento y asignándoles el rol correspondiente.
-     * 
-     * @param department Departamento al que pertenecerán los usuarios iniciales.
-     * @param roles Mapa de roles para obtener las entidades de ADMIN y USER.
-     */
+    private void seedDepartments() {
+        createDepartmentIfAbsent("IT");
+        createDepartmentIfAbsent("FINANCE");
+        createDepartmentIfAbsent("HR");
+        createDepartmentIfAbsent("SALES");
+        createDepartmentIfAbsent("OPERATIONS");
+    }
+
+    private void createDepartmentIfAbsent(String name) {
+        if (departmentRepository.existsByName(name)) return;
+        departmentRepository.save(DepartmentEntity.builder().name(name).build());
+    }
+
+
     private void seedUsers(DepartmentEntity department, Map<RoleEnum, RoleEntity> roles) {
         createUserIfAbsent("alexhizdev", "Alexis Jimenez", "alexhizdev@gmail.com",
                 "9511234567", department, roles.get(RoleEnum.ADMIN));
@@ -187,10 +176,7 @@ public class InitialConfig implements CommandLineRunner {
                 "9713488633", department, roles.get(RoleEnum.USER));
     }
 
-    /**
-     * Registra un usuario si su nombre de usuario no existe previamente en la base de datos.
-     * La contraseña se encripta de forma segura mediante BCrypt antes de almacenarla.
-     */
+
     private void createUserIfAbsent(String username, String fullName, String email,
                                     String phone, DepartmentEntity department, RoleEntity role) {
         if (userRepository.existsByUsername(username)) return;
@@ -205,10 +191,7 @@ public class InitialConfig implements CommandLineRunner {
                 .build());
     }
 
-    /**
-     * Inicializa las políticas de SLA (Service Level Agreements) predeterminadas para los cuatro
-     * niveles de prioridad: LOW, MEDIUM, HIGH y CRITICAL, especificando tiempos de respuesta y resolución en minutos.
-     */
+
     private void seedSlas() {
         createSlaIfAbsent("SLA Low", SlaPriotity.LOW, "240", "1440");
         createSlaIfAbsent("SLA Medium", SlaPriotity.MEDIUM, "120", "720");
@@ -216,10 +199,7 @@ public class InitialConfig implements CommandLineRunner {
         createSlaIfAbsent("SLA Critical", SlaPriotity.CRITICAL, "30", "120");
     }
 
-    /**
-     * Comprueba si ya existe una política de SLA para una prioridad dada; si no existe,
-     * la construye y la almacena con su estado activo.
-     */
+
     private void createSlaIfAbsent(String name, SlaPriotity priority,
                                    String responseMin, String resolutionMin) {
         if (slaRepository.existsByPriority(priority)) return;

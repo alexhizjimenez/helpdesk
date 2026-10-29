@@ -5,6 +5,7 @@ import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class CategoryPersistenceAdapter implements CategoryRepositoryPort {
