@@ -1,5 +1,6 @@
 package com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence;
 
+import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.RoleEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,8 +37,10 @@ public class UserEntity {
     @Column(length = 20)
     private String phone;
 
-    @Column(name = "department_id")
-    private UUID departmentId;
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private DepartmentEntity department;
+
 
     @Builder.Default
     @Column(name = "is_account_non_expired", nullable = false, columnDefinition = "boolean default true")

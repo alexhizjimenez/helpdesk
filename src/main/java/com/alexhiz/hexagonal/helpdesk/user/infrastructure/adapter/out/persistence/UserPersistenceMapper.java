@@ -1,7 +1,9 @@
 package com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence;
 
+import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import com.alexhiz.hexagonal.helpdesk.role.infrastructure.adapter.out.persistence.RolePersistenceMapper;
 import com.alexhiz.hexagonal.helpdesk.user.domain.model.User;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 public class UserPersistenceMapper {
 
     private final RolePersistenceMapper rolePersistenceMapper;
+    private final EntityManager entityManager;
 
     public User toDomain(UserEntity userEntity) {
         if (userEntity == null) return null;
@@ -22,7 +25,7 @@ public class UserPersistenceMapper {
                 .username(userEntity.getUsername())
                 .password(userEntity.getPassword())
                 .phone(userEntity.getPhone())
-                .departmentId(userEntity.getDepartmentId())
+                .departmentId(userEntity.getDepartment() != null ? userEntity.getDepartment().getId() : null)
                 .isAccountNonExpired(userEntity.isAccountNonExpired())
                 .isAccountNonLocked(userEntity.isAccountNonLocked())
                 .isCredentialsNonExpired(userEntity.isCredentialsNonExpired())
@@ -39,6 +42,10 @@ public class UserPersistenceMapper {
 
     public UserEntity toEntity(User user) {
         if (user == null) return null;
+        DepartmentEntity departmentEntity = null;
+        if (user.getDepartmentId() != null) {
+            departmentEntity = entityManager.getReference(DepartmentEntity.class, user.getDepartmentId());
+        }
         return UserEntity.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
@@ -46,7 +53,7 @@ public class UserPersistenceMapper {
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .phone(user.getPhone())
-                .departmentId(user.getDepartmentId())
+                .department(departmentEntity)
                 .isAccountNonExpired(user.isAccountNonExpired())
                 .isAccountNonLocked(user.isAccountNonLocked())
                 .isCredentialsNonExpired(user.isCredentialsNonExpired())

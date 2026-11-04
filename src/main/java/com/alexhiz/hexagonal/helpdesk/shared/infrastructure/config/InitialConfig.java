@@ -186,7 +186,7 @@ public class InitialConfig implements CommandLineRunner {
                 .username(username)
                 .password(passwordEncoder.encode("password123"))
                 .phone(phone)
-                .departmentId(department.getId())
+                .department(department)
                 .roles(Set.of(role))
                 .build());
     }
