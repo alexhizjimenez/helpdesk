@@ -22,4 +22,6 @@ public interface CategoryRepositoryPort {
     boolean existsByNameAndIdNot(String name, UUID id);
 
     PageResult<Category> findAllPages(PageQuery pageQuery);
+
+    Category restoreCategory(UUID id);
 }

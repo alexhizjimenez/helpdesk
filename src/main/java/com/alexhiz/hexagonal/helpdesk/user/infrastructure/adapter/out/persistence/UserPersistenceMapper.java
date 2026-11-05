@@ -25,7 +25,7 @@ public class UserPersistenceMapper {
                 .username(userEntity.getUsername())
                 .password(userEntity.getPassword())
                 .phone(userEntity.getPhone())
-                .departmentId(userEntity.getDepartment() != null ? userEntity.getDepartment().getId() : null)
+                .departmentId(userEntity.getDepartment() != null ? userEntity.getDepartment().getPublicId() : null)
                 .isAccountNonExpired(userEntity.isAccountNonExpired())
                 .isAccountNonLocked(userEntity.isAccountNonLocked())
                 .isCredentialsNonExpired(userEntity.isCredentialsNonExpired())

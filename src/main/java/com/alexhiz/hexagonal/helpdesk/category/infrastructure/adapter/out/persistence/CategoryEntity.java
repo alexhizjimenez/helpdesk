@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "categories")
+@Table(name = "categories", indexes = {
+        @Index(name = "ux_category_public_id", columnList = "public_id", unique = true)
+})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -17,8 +19,11 @@ import java.util.UUID;
 public class CategoryEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @Column(name = "public_id", nullable = false, updatable = false)
+    private UUID publicId;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -36,6 +41,8 @@ public class CategoryEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     public void prePersist(){
@@ -45,6 +52,10 @@ public class CategoryEntity {
         }
         if(this.updatedAt == null) {
             this.updatedAt = LocalDateTime.now();
+        }
+
+        if (publicId == null) {
+            publicId = UUID.randomUUID();
         }
     }
 

@@ -22,7 +22,8 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CategoryService implements CreateCategoryUseCase, UpdateCategoryUseCase, GetCategoryByIdUseCase, ListCategoriesUseCase, DeleteCategoryUseCase, GetCategoriesByDepartmentUseCase, PageCategoriesUseCase  {
+public class CategoryService implements CreateCategoryUseCase, UpdateCategoryUseCase, GetCategoryByIdUseCase, ListCategoriesUseCase,
+        DeleteCategoryUseCase, GetCategoriesByDepartmentUseCase, PageCategoriesUseCase, RestoreCategoryUseCase  {
     private static final String CATEGORIES_CACHE_KEY = "categories";
     private static final Duration  CACHE_TTL = Duration.ofMinutes(10);
     private final RedisTemplate<String, Object> redisTemplate;
@@ -53,8 +54,8 @@ public class CategoryService implements CreateCategoryUseCase, UpdateCategoryUse
         if(!categoryRepositoryPort.existsById(id)){
             throw  new CategoryNotFoundException(id);
         }
-        evictCategoriesCache();
         categoryRepositoryPort.delete(id);
+        evictCategoriesCache();
     }
 
     @Override
@@ -165,5 +166,11 @@ public class CategoryService implements CreateCategoryUseCase, UpdateCategoryUse
         }
 
         return pageResult;
+    }
+
+    @Override
+    @Transactional
+    public Category restore(UUID id) {
+        return categoryRepositoryPort.restoreCategory(id);
     }
 }

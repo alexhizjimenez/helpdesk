@@ -1,6 +1,7 @@
 package com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence;
 
 import com.alexhiz.hexagonal.helpdesk.category.application.port.out.CategoryRepositoryPort;
+import com.alexhiz.hexagonal.helpdesk.category.domain.exception.CategoryNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,7 +33,7 @@ public class CategoryPersistenceAdapter implements CategoryRepositoryPort {
 
     @Override
     public Optional<Category> findById(UUID id) {
-        return categoryRepository.findById(id).map(categoryPersistenceMapper::toDomain);
+        return categoryRepository.findByPublicId(id).map(categoryPersistenceMapper::toDomain);
     }
 
     @Override
@@ -41,7 +43,7 @@ public class CategoryPersistenceAdapter implements CategoryRepositoryPort {
 
     @Override
     public boolean existsById(UUID id) {
-        return categoryRepository.existsById(id);
+        return categoryRepository.existsByPublicId(id);
     }
 
     @Override
@@ -51,7 +53,11 @@ public class CategoryPersistenceAdapter implements CategoryRepositoryPort {
 
     @Override
     public void delete(UUID id) {
-        categoryRepository.deleteById(id);
+        CategoryEntity category = categoryRepository.findByPublicId(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+        category.setActive(false);
+        category.setDeletedAt(LocalDateTime.now());
+        categoryRepository.saveAndFlush(category);
     }
 
     @Override
@@ -71,7 +77,7 @@ public class CategoryPersistenceAdapter implements CategoryRepositoryPort {
 
     @Override
     public boolean existsByNameAndIdNot(String name, UUID id) {
-        return categoryRepository.existsByNameAndIdNot(name,id);
+        return categoryRepository.existsByNameAndPublicIdNot(name,id);
     }
 
     @Override
@@ -80,5 +86,24 @@ public class CategoryPersistenceAdapter implements CategoryRepositoryPort {
         Page<CategoryEntity> entityPage = categoryRepository.findAll(pageable);
         List<Category> list = entityPage.getContent().stream().map(categoryPersistenceMapper::toDomain).toList();
         return new PageResult<>(list, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
+    }
+
+    @Override
+    public Category restoreCategory(UUID id) {
+        CategoryEntity category = categoryRepository.findByPublicId(id).orElseThrow(() -> new CategoryNotFoundException(id));
+        log.info("Before restore - deletedAt: {}, updatedAt: {}",
+                category.getDeletedAt(), category.getUpdatedAt());
+
+        if (category.getDeletedAt() == null) {
+            log.info("Category already restored: {}", id);
+            return categoryPersistenceMapper.toDomain(category);
+        }
+        category.setActive(true);
+        category.setDeletedAt(null);
+        CategoryEntity saved = categoryRepository.saveAndFlush(category);
+
+        log.info("After restore - deletedAt: {}, updatedAt: {}",
+                saved.getDeletedAt(), saved.getUpdatedAt());
+        return categoryPersistenceMapper.toDomain(saved);
     }
 }
