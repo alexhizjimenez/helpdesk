@@ -5,4 +5,8 @@ public record PageQuery(int page, int size) {
         if (page < 0) throw new IllegalArgumentException("La página no puede ser menor a 0");
         if (size <= 0) throw new IllegalArgumentException("El tamaño debe ser mayor a 0");
     }
+
+    public PageQuery(int page) {
+        this(page, 10);
+    }
 }

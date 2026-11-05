@@ -1,6 +1,7 @@
  package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence;
 
 import com.alexhiz.hexagonal.helpdesk.department.application.port.out.DepartmentRepositoryPort;
+import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageQuery;
 import com.alexhiz.hexagonal.helpdesk.shared.domain.model.PageResult;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,12 +40,12 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
 
     @Override
     public Optional<Department> findById(UUID id) {
-        return departmentRepository.findById(id).map(departmentPersistenceMapper::toDomain);
+        return departmentRepository.findByPublicId(id).map(departmentPersistenceMapper::toDomain);
     }
 
     @Override
     public boolean existsById(UUID id) {
-        return departmentRepository.existsById(id);
+        return departmentRepository.existsByPublicId(id);
     }
 
     @Override
@@ -53,12 +55,15 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
 
     @Override
     public void delete(UUID id) {
-        departmentRepository.deleteById(id);
+        DepartmentEntity department = departmentRepository.findByPublicId(id).orElseThrow(()-> new DepartmentNotFoundException(id));
+        department.setActive(false);
+        department.setDeletedAt(LocalDateTime.now());
+        departmentRepository.saveAndFlush(department);
     }
 
     @Override
     public boolean existsByNameAndIdNot(String name, UUID id) {
-        return departmentRepository.existsByNameAndIdNot(name, id);
+        return departmentRepository.existsByNameAndPublicIdNot(name, id);
     }
 
     @Override
@@ -67,5 +72,17 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
         Page<DepartmentEntity> entityPage= departmentRepository.findAll(pageable);
         List<Department> list = entityPage.getContent().stream().map(departmentPersistenceMapper::toDomain).toList();
         return new PageResult<>(list, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
+    }
+
+    @Override
+    public Department restoreDepartment(UUID id) {
+        DepartmentEntity department = departmentRepository.findByPublicId(id).orElseThrow(()-> new DepartmentNotFoundException(id));
+        if (department.getDeletedAt() == null) {
+            return departmentPersistenceMapper.toDomain(department);
+        }
+        department.setActive(true);
+        department.setDeletedAt(null);
+        DepartmentEntity saved = departmentRepository.saveAndFlush(department);
+        return departmentPersistenceMapper.toDomain(saved);
     }
 }

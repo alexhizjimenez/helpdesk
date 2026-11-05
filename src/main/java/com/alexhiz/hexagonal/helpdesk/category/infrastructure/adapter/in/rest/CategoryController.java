@@ -33,6 +33,7 @@ public class CategoryController {
     private final GetCategoriesByDepartmentUseCase getCategoriesByDepartmentUseCase;
     private final PageCategoriesUseCase pageCategoriesUseCase;
     private final GetDepartmentByIdUseCase getDepartmentByIdUseCase;
+    private final RestoreCategoryUseCase restoreCategoryUseCase;
 
     @Operation(
             summary = "Crea categoria",
@@ -73,6 +74,15 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body(toResponse(category));
     }
 
+    @PatchMapping("/{id}/restore")
+    @Operation(summary = "Resatura una categoría", description = "Restaura los datos de una categoría existente")
+    @ApiResponse(responseCode = "200", description = "Categoría restaurada correctamente")
+    @ApiResponse(responseCode = "404", description = "Categoría no encontrado")
+    public ResponseEntity<CategoryResponse> restore(@PathVariable UUID id){
+        Category category = restoreCategoryUseCase.restore(id);
+        return ResponseEntity.status(HttpStatus.OK).body(toResponse(category));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Elimina una categoría", description = "Elimina una categoría por su identificador")
     @ApiResponse(responseCode = "204", description = "Categoría eliminada correctamente")
@@ -96,7 +106,7 @@ public class CategoryController {
     @ApiResponse(responseCode = "200", description = "Página de categorías obtenida correctamente")
     public ResponseEntity<PageResult<CategoryResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "2") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         PageResult<CategoryResponse> domainPage = pageCategoriesUseCase.execute(new PageQuery(page, size)).map(this::toResponse);
         return ResponseEntity.status(HttpStatus.OK).body(domainPage);
     }

@@ -17,10 +17,13 @@ public class CategoryPersistenceMapper {
     public Category toDomain(CategoryEntity entity){
         if (entity == null) return null;
         return Category.builder()
-                .id(entity.getId()).name(entity.getName())
-                .departmentId(entity.getDepartment() != null ? entity.getDepartment().getId() : null)
+                .id(entity.getId())
+                .publicId(entity.getPublicId())
+                .name(entity.getName())
+                .departmentId(entity.getDepartment() != null ? entity.getDepartment().getPublicId() : null)
                 .active(entity.getActive())
-                .createdAt(entity.getCreatedAt()).updatedAt(entity.getUpdatedAt()).build();
+                .createdAt(entity.getCreatedAt()).updatedAt(entity.getUpdatedAt())
+                .deletedAt(entity.getDeletedAt()).build();
     }
 
     public CategoryEntity toEntity(Category category){
@@ -31,9 +34,12 @@ public class CategoryPersistenceMapper {
             departmentEntity = entityManager.getReference(DepartmentEntity.class, category.getDepartmentId());
         }
         return CategoryEntity.builder()
-                .id(category.getId()).name(category.getName())
+                .id(category.getId())
+                .publicId(category.getPublicId())
+                .name(category.getName())
                 .department(departmentEntity)
                 .active(category.getActive())
-                .createdAt(category.getCreatedAt()).updatedAt(category.getUpdatedAt()).build();
+                .createdAt(category.getCreatedAt()).updatedAt(category.getUpdatedAt())
+                .deletedAt(category.getDeletedAt()).build();
     }
 }

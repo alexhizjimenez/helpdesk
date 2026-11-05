@@ -17,4 +17,5 @@ public interface DepartmentRepositoryPort {
     void delete(UUID id);
     boolean existsByNameAndIdNot(String name, UUID id);
     PageResult<Department> findAllPages(PageQuery pageQuery);
+    Department restoreDepartment(UUID id);
 }
