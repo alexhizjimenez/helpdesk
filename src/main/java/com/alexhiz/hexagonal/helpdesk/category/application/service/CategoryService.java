@@ -44,7 +44,7 @@ public class CategoryService implements CreateCategoryUseCase, UpdateCategoryUse
         }
         category.setName(name);
         Category saved = categoryRepositoryPort.save(category);
-        evictCategoriesCache();
+        //evictCategoriesCache();
         return saved;
     }
 
@@ -55,7 +55,7 @@ public class CategoryService implements CreateCategoryUseCase, UpdateCategoryUse
             throw  new CategoryNotFoundException(id);
         }
         categoryRepositoryPort.delete(id);
-        evictCategoriesCache();
+        //evictCategoriesCache();
     }
 
     @Override
