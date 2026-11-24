@@ -55,8 +55,14 @@ public class InitialConfig implements CommandLineRunner {
     public void run(String... args) throws Exception {
         Map<PermissionEnum, PermissionEntity> p = seedPermissions();
         Map<RoleEnum, RoleEntity> roles = seedRoles(p);
-        DepartmentEntity department = seedDepartment("SOCIAL6");
-        seedUsers(department, roles);
+        DepartmentEntity depGeneral = seedDepartment("GENERAL");
+        DepartmentEntity depRrhh = seedDepartment("RECURSOS_HUMANOS");
+        DepartmentEntity depIt = seedDepartment("TECNOLOGIAS_DE_LA_INFORMACION");
+        DepartmentEntity depFinanzas = seedDepartment("FINANZAS_Y_CONTABILIDAD");
+        DepartmentEntity depVentas = seedDepartment("VENTAS_Y_COMERCIAL");
+        DepartmentEntity depMarketing = seedDepartment("MARKETING_Y_COMUNICACION");
+        DepartmentEntity depOperaciones = seedDepartment("OPERACIONES_Y_LOGISTICA");
+        seedUsers(depGeneral, roles);
         seedSlas();
         seedCategories();
     }
@@ -79,22 +85,30 @@ public class InitialConfig implements CommandLineRunner {
     }
 
     private void seedCategories() {
-        createCategoryIfAbsent("Recursos Humanos", "Gestión de personal, talento humano, contratación y clima laboral.");
-        createCategoryIfAbsent("Tecnologías de la Información (IT)", "Soporte técnico, desarrollo de software, infraestructura y ciberseguridad.");
-        createCategoryIfAbsent("Finanzas y Contabilidad", "Control financiero, presupuestos, contabilidad, facturación y auditoría.");
-        createCategoryIfAbsent("Ventas y Comercial", "Gestión de clientes, prospección, estrategias comerciales y cierre de ventas.");
-        createCategoryIfAbsent("Marketing y Comunicación", "Publicidad, manejo de redes sociales, branding y relaciones públicas.");
-        createCategoryIfAbsent("Operaciones y Logística", "Cadena de suministro, control de inventarios y gestión de procesos operativos.");
+    		DepartmentEntity depRrhh = seedDepartment("RECURSOS_HUMANOS");
+    		DepartmentEntity depIt = seedDepartment("TECNOLOGIAS_DE_LA_INFORMACION");
+    		DepartmentEntity depFinanzas = seedDepartment("FINANZAS_Y_CONTABILIDAD");
+    		DepartmentEntity depVentas = seedDepartment("VENTAS_Y_COMERCIAL");
+    		DepartmentEntity depMarketing = seedDepartment("MARKETING_Y_COMUNICACION");
+    		DepartmentEntity depOperaciones = seedDepartment("OPERACIONES_Y_LOGISTICA");
+        
+        createCategoryIfAbsent("Recursos Humanos", "Gestión de personal, talento humano, contratación y clima laboral.", depRrhh.getId());
+        createCategoryIfAbsent("Tecnologías de la Información (IT)", "Soporte técnico, desarrollo de software, infraestructura y ciberseguridad.", depIt.getId());
+        createCategoryIfAbsent("Finanzas y Contabilidad", "Control financiero, presupuestos, contabilidad, facturación y auditoría.", depFinanzas.getId());
+        createCategoryIfAbsent("Ventas y Comercial", "Gestión de clientes, prospección, estrategias comerciales y cierre de ventas.", depVentas.getId());
+        createCategoryIfAbsent("Marketing y Comunicación", "Publicidad, manejo de redes sociales, branding y relaciones públicas.", depMarketing.getId());
+        createCategoryIfAbsent("Operaciones y Logística", "Cadena de suministro, control de inventarios y gestión de procesos operativos.", depOperaciones.getId());
     }
 
     /**
      * Comprueba si ya existe una categoría por su nombre; si no existe,
      * la construye y la almacena.
      */
-    private void createCategoryIfAbsent(String name, String description) {
+    private void createCategoryIfAbsent(String name, String description, UUID department_id) {
         if (categoryRepository.existsByName(name)) return;
         categoryRepository.save(CategoryEntity.builder()
                 .name(name)
+                .departmentId(department_id)
                 .build());
     }
 
