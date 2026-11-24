@@ -22,7 +22,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class DepartmentService implements CreateDepartmentUseCase, ListDepartmentsUseCase, GetDepartmentByIdUseCase,
-        UpdateDepartmentUseCase, DeleteDepartmentUseCase, PageDepartmentsUseCase {
+        UpdateDepartmentUseCase, DeleteDepartmentUseCase, PageDepartmentsUseCase, RestoreDepartmentUseCase {
 
     private static final String DEPARTMENTS_CACHE_KEY = "departments";
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
@@ -163,5 +163,11 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
         }
 
         return pageResult;
+    }
+
+
+    @Override
+    public Department restore(UUID id) {
+        return departmentRepositoryPort.restoreDepartment(id);
     }
 }

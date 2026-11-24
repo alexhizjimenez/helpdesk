@@ -85,7 +85,7 @@ public class TicketController {
         return ResponseEntity.status(HttpStatus.OK).body(toResponse(ticket));
     }
 
-
+//Resolver esta parte, por que hace consulta n+1 n+2
     private TicketResponse toResponse(Ticket ticket) {
         String categoryName = null;
         if (ticket.getCategoryId() != null) {

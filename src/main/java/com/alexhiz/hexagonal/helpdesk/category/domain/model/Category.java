@@ -13,10 +13,12 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Category {
     @EqualsAndHashCode.Include
-    private UUID id;
+    private Long id;
+    private UUID publicId;
     private String name;
     private UUID departmentId;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 }

@@ -15,8 +15,11 @@ import java.util.UUID;
 @Builder
 public class DepartmentEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @Column(name = "public_id", nullable = false, updatable = false)
+    private UUID publicId;
 
     @Column(nullable = false, length = 255, unique = true)
     private String name;
@@ -30,6 +33,9 @@ public class DepartmentEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -38,6 +44,10 @@ public class DepartmentEntity {
         }
         if (this.updatedAt == null) {
             this.updatedAt = LocalDateTime.now();
+        }
+
+        if (this.publicId == null) {
+            this.publicId = UUID.randomUUID();
         }
     }
 

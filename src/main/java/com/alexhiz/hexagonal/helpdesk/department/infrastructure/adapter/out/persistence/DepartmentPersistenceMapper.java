@@ -10,10 +10,12 @@ public class DepartmentPersistenceMapper {
         if (departmentEntity == null) return null;
         return Department.builder()
                 .id(departmentEntity.getId())
+                .publicId(departmentEntity.getPublicId())
                 .name(departmentEntity.getName())
                 .active(departmentEntity.getActive())
                 .createdAt(departmentEntity.getCreatedAt())
                 .updatedAt(departmentEntity.getUpdatedAt())
+                .deletedAt(departmentEntity.getDeletedAt())
                 .build();
     }
 
@@ -21,10 +23,12 @@ public class DepartmentPersistenceMapper {
         if (department == null) return null;
         return DepartmentEntity.builder()
                 .id(department.getId())
+                .publicId(department.getPublicId())
                 .name(department.getName())
                 .active(department.getActive())
                 .createdAt(department.getCreatedAt())
                 .updatedAt(department.getUpdatedAt())
+                .deletedAt(department.getDeletedAt())
                 .build();
     }
 }

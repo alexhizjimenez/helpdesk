@@ -12,16 +12,18 @@ public record DepartmentResponse(
         String name,
         Boolean active,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        LocalDateTime deletedAt
 ) {
 
     public static DepartmentResponse from(Department department) {
         return DepartmentResponse.builder()
-                .id(department.getId())
+                .id(department.getPublicId())
                 .name(department.getName())
                 .active(department.getActive())
                 .createdAt(department.getCreatedAt())
                 .updatedAt(department.getUpdatedAt())
+                .deletedAt(department.getDeletedAt())
                 .build();
     }
 

@@ -31,6 +31,7 @@ public class DepartmentController {
     private final GetDepartmentByIdUseCase getDepartmentByIdUseCase;
     private final UpdateDepartmentUseCase updateDepartmentUseCase;
     private final PageDepartmentsUseCase pageDepartmentsUseCase;
+    private final RestoreDepartmentUseCase restoreDepartmentUseCase;
 
     @PostMapping
     @Operation(summary = "Crea un departamento", description = "Crea un nuevo departamento")
@@ -83,8 +84,17 @@ public class DepartmentController {
     @ApiResponse(responseCode = "200", description = "Página de departamentos obtenida correctamente")
     public ResponseEntity<PageResult<DepartmentResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "2") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         PageResult<DepartmentResponse> domainPage = pageDepartmentsUseCase.execute(new PageQuery(page, size)).map(DepartmentResponse::from);
         return ResponseEntity.status(HttpStatus.OK).body(domainPage);
+    }
+
+    @PatchMapping("/{id}/restore")
+    @Operation(summary = "Restaurar un departamento", description = "Restaura los datos de un departamento existente")
+    @ApiResponse(responseCode = "200", description = "Departamento restaurado correctamente")
+    @ApiResponse(responseCode = "404", description = "Departamento no encontrado")
+    public ResponseEntity<DepartmentResponse> update(@PathVariable UUID id){
+        Department department = restoreDepartmentUseCase.restore(id);
+        return ResponseEntity.status(HttpStatus.OK).body(DepartmentResponse.from(department));
     }
 }

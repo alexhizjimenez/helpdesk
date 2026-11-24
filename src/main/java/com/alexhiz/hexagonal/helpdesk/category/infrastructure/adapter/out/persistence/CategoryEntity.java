@@ -1,5 +1,6 @@
 package com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence;
 
+import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,7 +8,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "categories")
+@Table(name = "categories", indexes = {
+        @Index(name = "ux_category_public_id", columnList = "public_id", unique = true)
+})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -16,14 +19,18 @@ import java.util.UUID;
 public class CategoryEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @Column(name = "public_id", nullable = false, updatable = false)
+    private UUID publicId;
 
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(name = "department_id")
-    private UUID departmentId;
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private DepartmentEntity department;
 
     @Column(nullable = false)
     private Boolean active;
@@ -34,6 +41,8 @@ public class CategoryEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     public void prePersist(){
@@ -43,6 +52,10 @@ public class CategoryEntity {
         }
         if(this.updatedAt == null) {
             this.updatedAt = LocalDateTime.now();
+        }
+
+        if (publicId == null) {
+            publicId = UUID.randomUUID();
         }
     }
 

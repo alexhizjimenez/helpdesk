@@ -7,8 +7,9 @@ import java.util.UUID;
 
 public interface DepartmentRepository extends JpaRepository<DepartmentEntity, UUID> {
     boolean existsByName(String name);
-    boolean existsByNameAndIdNot(String name, UUID id);
-
+    boolean existsByNameAndPublicIdNot(String name, UUID id);
+    Optional<DepartmentEntity> findByPublicId(UUID id);
     Optional<DepartmentEntity> findByName(String name);
+    boolean existsByPublicId(UUID id);
 
 }
