@@ -39,7 +39,7 @@ public class DepartmentPersistenceAdapter implements DepartmentRepositoryPort {
     }
 
     @Override
-    public Optional<Department> findById(UUID id) {
+    public Optional<Department> findByPublicId(UUID id) {
         return departmentRepository.findByPublicId(id).map(departmentPersistenceMapper::toDomain);
     }
 

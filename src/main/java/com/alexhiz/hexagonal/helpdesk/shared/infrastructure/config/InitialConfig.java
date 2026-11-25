@@ -1,8 +1,9 @@
 package com.alexhiz.hexagonal.helpdesk.shared.infrastructure.config;
 
+import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryEntity;
+import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryPersistenceMapper;
 import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persistence.CategoryRepository;
-import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentRepository;
 import com.alexhiz.hexagonal.helpdesk.role.domain.model.PermissionEnum;
@@ -17,23 +18,21 @@ import com.alexhiz.hexagonal.helpdesk.sla.infrastructure.adapter.out.persistence
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserEntity;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Componente de inicialización del sistema (Data Seeder / Runner).
- * Implementa CommandLineRunner para ejecutarse automáticamente una vez que el contexto de Spring Boot ha iniciado.
- * Se encarga de poblar la base de datos con información base inicial:
- * Permisos, Roles con sus asignaciones, Departamentos, Usuarios predeterminados y Políticas SLA.
- */
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class InitialConfig implements CommandLineRunner {
@@ -45,27 +44,19 @@ public class InitialConfig implements CommandLineRunner {
     private final UserRepository userRepository;
     private final SlaRepository slaRepository;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final EntityManager entityManager;
+    private final CategoryPersistenceMapper categoryPersistenceMapper;
 
-    /**
-     * Punto de entrada principal ejecutado al arrancar la aplicación.
-     * Toda la secuencia se ejecuta bajo una transacción (@Transactional) para asegurar consistencia;
-     * orquesta el orden de creación respetando las dependencias de negocio (permisos -> roles -> departamentos -> usuarios -> SLAs).
-     */
+
     @Override
     @Transactional(rollbackFor = {IOException.class, SQLException.class})
     public void run(String... args) throws Exception {
         Map<PermissionEnum, PermissionEntity> p = seedPermissions();
         Map<RoleEnum, RoleEntity> roles = seedRoles(p);
         DepartmentEntity depGeneral = seedDepartment("GENERAL");
-        DepartmentEntity depRrhh = seedDepartment("RECURSOS_HUMANOS");
-        DepartmentEntity depIt = seedDepartment("TECNOLOGIAS_DE_LA_INFORMACION");
-        DepartmentEntity depFinanzas = seedDepartment("FINANZAS_Y_CONTABILIDAD");
-        DepartmentEntity depVentas = seedDepartment("VENTAS_Y_COMERCIAL");
-        DepartmentEntity depMarketing = seedDepartment("MARKETING_Y_COMUNICACION");
-        DepartmentEntity depOperaciones = seedDepartment("OPERACIONES_Y_LOGISTICA");
         seedUsers(depGeneral, roles);
         seedSlas();
-
+        seedCategories();
     }
 
 
@@ -88,24 +79,24 @@ public class InitialConfig implements CommandLineRunner {
     		DepartmentEntity depMarketing = seedDepartment("MARKETING_Y_COMUNICACION");
     		DepartmentEntity depOperaciones = seedDepartment("OPERACIONES_Y_LOGISTICA");
         
-        createCategoryIfAbsent("Recursos Humanos", "Gestión de personal, talento humano, contratación y clima laboral.", depRrhh.getId());
-        createCategoryIfAbsent("Tecnologías de la Información (IT)", "Soporte técnico, desarrollo de software, infraestructura y ciberseguridad.", depIt.getId());
-        createCategoryIfAbsent("Finanzas y Contabilidad", "Control financiero, presupuestos, contabilidad, facturación y auditoría.", depFinanzas.getId());
-        createCategoryIfAbsent("Ventas y Comercial", "Gestión de clientes, prospección, estrategias comerciales y cierre de ventas.", depVentas.getId());
-        createCategoryIfAbsent("Marketing y Comunicación", "Publicidad, manejo de redes sociales, branding y relaciones públicas.", depMarketing.getId());
-        createCategoryIfAbsent("Operaciones y Logística", "Cadena de suministro, control de inventarios y gestión de procesos operativos.", depOperaciones.getId());
+        createCategoryIfAbsent("Recursos Humanos", "Gestión de personal, talento humano, contratación y clima laboral.", depRrhh);
+        createCategoryIfAbsent("Tecnologías de la Información (IT)", "Soporte técnico, desarrollo de software, infraestructura y ciberseguridad.", depIt);
+        createCategoryIfAbsent("Finanzas y Contabilidad", "Control financiero, presupuestos, contabilidad, facturación y auditoría.", depFinanzas);
+        createCategoryIfAbsent("Ventas y Comercial", "Gestión de clientes, prospección, estrategias comerciales y cierre de ventas.", depVentas);
+        createCategoryIfAbsent("Marketing y Comunicación", "Publicidad, manejo de redes sociales, branding y relaciones públicas.", depMarketing);
+        createCategoryIfAbsent("Operaciones y Logística", "Cadena de suministro, control de inventarios y gestión de procesos operativos.", depOperaciones);
     }
 
-    /**
-     * Comprueba si ya existe una categoría por su nombre; si no existe,
-     * la construye y la almacena.
-     */
-    private void createCategoryIfAbsent(String name, String description, UUID department_id) {
+
+    private void createCategoryIfAbsent(String name, String description, DepartmentEntity department) {
         if (categoryRepository.existsByName(name)) return;
-        categoryRepository.save(CategoryEntity.builder()
+        Category category = Category.builder()
                 .name(name)
-                .departmentId(department_id)
-                .build());
+                .departmentId(department != null ? department.getPublicId() : null)
+                .active(true)
+                .build();
+        CategoryEntity entity = categoryPersistenceMapper.toEntity(category);
+        categoryRepository.save(entity);
     }
 
 
@@ -160,19 +151,6 @@ public class InitialConfig implements CommandLineRunner {
         return departmentRepository.findByName(name)
                 .orElseGet(() -> departmentRepository.save(
                         DepartmentEntity.builder().name(name).active(true).build()));
-    }
-
-    private void seedDepartments() {
-        createDepartmentIfAbsent("IT");
-        createDepartmentIfAbsent("FINANCE");
-        createDepartmentIfAbsent("HR");
-        createDepartmentIfAbsent("SALES");
-        createDepartmentIfAbsent("OPERATIONS");
-    }
-
-    private void createDepartmentIfAbsent(String name) {
-        if (departmentRepository.existsByName(name)) return;
-        departmentRepository.save(DepartmentEntity.builder().name(name).build());
     }
 
 

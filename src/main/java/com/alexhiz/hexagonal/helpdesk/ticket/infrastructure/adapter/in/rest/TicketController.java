@@ -97,7 +97,7 @@ public class TicketController {
 
         String departmentName = null;
         if (ticket.getDepartmentId() != null) {
-            Department department = getDepartmentByIdUseCase.getDepartmentById(ticket.getDepartmentId());
+            Department department = getDepartmentByIdUseCase.getDepartmentByPublicId(ticket.getDepartmentId());
             if (department != null) {
                 departmentName = department.getName();
             }

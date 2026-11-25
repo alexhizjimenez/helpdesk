@@ -2,6 +2,7 @@ package com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.out.persi
 
 
 import com.alexhiz.hexagonal.helpdesk.category.domain.model.Category;
+import com.alexhiz.hexagonal.helpdesk.department.domain.exception.DepartmentNotFoundException;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.out.persistence.DepartmentEntity;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class CategoryPersistenceMapper {
                 .id(entity.getId())
                 .publicId(entity.getPublicId())
                 .name(entity.getName())
-                .departmentId(entity.getDepartment() != null ? entity.getDepartment().getPublicId() : null)
+                .departmentId(entity.getDepartment() != null ? entity.getDepartment().getPublicId(): null)
                 .active(entity.getActive())
                 .createdAt(entity.getCreatedAt()).updatedAt(entity.getUpdatedAt())
                 .deletedAt(entity.getDeletedAt()).build();
@@ -31,7 +32,14 @@ public class CategoryPersistenceMapper {
         // Creamos una referencia al DepartmentEntity usando solo su ID (sin hacer SELECT a la BD)
         DepartmentEntity departmentEntity = null;
         if (category.getDepartmentId() != null) {
-            departmentEntity = entityManager.getReference(DepartmentEntity.class, category.getDepartmentId());
+            departmentEntity = entityManager.createQuery(
+                            "SELECT d FROM DepartmentEntity d WHERE d.publicId = :publicId",
+                            DepartmentEntity.class)
+                    .setParameter("publicId", category.getDepartmentId())
+                    .getResultStream()
+                    .findFirst()
+                    .orElseThrow(() -> new DepartmentNotFoundException(
+                            "Department not found with publicId: " + category.getDepartmentId()));
         }
         return CategoryEntity.builder()
                 .id(category.getId())

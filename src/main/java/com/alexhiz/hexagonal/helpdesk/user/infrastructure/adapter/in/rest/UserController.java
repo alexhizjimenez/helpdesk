@@ -81,7 +81,7 @@ public class UserController {
     private UserResponse toResponse(User user) {
         Department department = user.getDepartmentId() == null
                 ? null
-                : getDepartmentByIdUseCase.getDepartmentById(user.getDepartmentId());
+                : getDepartmentByIdUseCase.getDepartmentByPublicId(user.getDepartmentId());
 
         return UserResponse.from(user, department);
     }

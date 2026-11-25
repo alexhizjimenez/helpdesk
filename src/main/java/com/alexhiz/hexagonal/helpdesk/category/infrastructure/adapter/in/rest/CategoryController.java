@@ -115,7 +115,7 @@ public class CategoryController {
     private CategoryResponse toResponse(Category category) {
         Department department = category.getDepartmentId() == null
                 ? null
-                : getDepartmentByIdUseCase.getDepartmentById(category.getDepartmentId());
+                : getDepartmentByIdUseCase.getDepartmentByPublicId(category.getDepartmentId());
 
         return CategoryResponse.from(category, department);
     }
