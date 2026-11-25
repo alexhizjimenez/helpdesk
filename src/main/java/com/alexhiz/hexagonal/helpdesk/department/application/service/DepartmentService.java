@@ -96,14 +96,14 @@ public class DepartmentService implements CreateDepartmentUseCase, ListDepartmen
     }
 
     @Override
-    public Department getDepartmentById(UUID id) {
-        return departmentRepositoryPort.findById(id).orElseThrow(() -> new DepartmentNotFoundException(id));
+    public Department getDepartmentByPublicId(UUID id) {
+        return departmentRepositoryPort.findByPublicId(id).orElseThrow(() -> new DepartmentNotFoundException(id));
     }
 
     @Override
     @Transactional
     public Department update(UUID id, Department department) {
-        Department existingDepartment = departmentRepositoryPort.findById(id)
+        Department existingDepartment = departmentRepositoryPort.findByPublicId(id)
                 .orElseThrow(() -> new DepartmentNotFoundException(id));
         if (department.getName() == null || department.getName().trim().isEmpty()) {
             throw new BusinessException("Department name cannot be empty");

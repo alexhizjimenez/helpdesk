@@ -1,6 +1,5 @@
 package com.alexhiz.hexagonal.helpdesk.user.infrastructure.security;
 
-import com.alexhiz.hexagonal.helpdesk.auth.infrastructure.adapter.in.rest.dto.AuthResponse;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserEntity;
 import com.alexhiz.hexagonal.helpdesk.user.infrastructure.adapter.out.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;

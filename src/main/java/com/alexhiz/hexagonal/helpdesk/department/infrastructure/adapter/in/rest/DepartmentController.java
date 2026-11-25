@@ -1,6 +1,5 @@
 package com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.in.rest;
 
-import com.alexhiz.hexagonal.helpdesk.category.infrastructure.adapter.in.rest.dto.CategoryResponse;
 import com.alexhiz.hexagonal.helpdesk.department.application.port.in.*;
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 import com.alexhiz.hexagonal.helpdesk.department.infrastructure.adapter.in.rest.dto.DepartmentRequest;
@@ -66,7 +65,7 @@ public class DepartmentController {
     @ApiResponse(responseCode = "200", description = "Departamento obtenido correctamente")
     @ApiResponse(responseCode = "404", description = "Departamento no encontrado")
     public ResponseEntity<DepartmentResponse> getDepartment(@PathVariable UUID id) {
-        Department department = getDepartmentByIdUseCase.getDepartmentById(id);
+        Department department = getDepartmentByIdUseCase.getDepartmentByPublicId(id);
         return ResponseEntity.status(HttpStatus.OK).body(DepartmentResponse.from(department));
     }
 

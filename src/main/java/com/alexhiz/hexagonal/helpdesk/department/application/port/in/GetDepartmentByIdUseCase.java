@@ -1,9 +1,9 @@
 package com.alexhiz.hexagonal.helpdesk.department.application.port.in;
 
-import java.util.UUID;
-
 import com.alexhiz.hexagonal.helpdesk.department.domain.model.Department;
 
+import java.util.UUID;
+
 public interface GetDepartmentByIdUseCase {
-    Department getDepartmentById(UUID id);
+    Department getDepartmentByPublicId(UUID id);
 }

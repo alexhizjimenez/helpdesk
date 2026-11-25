@@ -28,7 +28,7 @@ public class CategoryEntity {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private DepartmentEntity department;
 

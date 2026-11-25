@@ -11,11 +11,12 @@ import java.util.UUID;
 public interface DepartmentRepositoryPort {
     Department save(Department department);
     List<Department> findAll();
-    Optional<Department> findById(UUID id);
     boolean existsById(UUID id);
     boolean existsByName(String name);
     void delete(UUID id);
     boolean existsByNameAndIdNot(String name, UUID id);
     PageResult<Department> findAllPages(PageQuery pageQuery);
     Department restoreDepartment(UUID id);
+    Optional<Department> findByPublicId(UUID id);
+
 }
